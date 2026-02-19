@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="corporate">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +8,7 @@
     <title>Login — {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+
 <body class="min-h-screen bg-base-200 flex items-center justify-center">
     <div class="card w-full max-w-md bg-base-100 shadow-xl">
         <div class="card-body">
@@ -15,8 +17,10 @@
 
             @if ($errors->any())
                 <div role="alert" class="alert alert-error mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>{{ $errors->first() }}</span>
                 </div>
@@ -25,49 +29,36 @@
             <form method="POST" action="{{ route('login') }}">
                 @csrf
 
-                <div class="form-control mb-4">
-                    <label class="label" for="email">
-                        <span class="label-text">Email</span>
-                    </label>
-                    <input
-                        id="email"
-                        type="email"
-                        name="email"
-                        value="{{ old('email') }}"
-                        class="input input-bordered w-full @error('email') input-error @enderror"
-                        required
-                        autofocus
-                        autocomplete="email"
-                    >
-                </div>
+                <fieldset class="fieldset mb-4">
+                    <label class="label" for="email">Email</label>
+                    <input id="email" type="email" name="email" value="{{ old('email') }}"
+                        class="input w-full @error('email') input-error @enderror" required autofocus
+                        autocomplete="email">
+                </fieldset>
 
-                <div class="form-control mb-6">
-                    <label class="label" for="password">
-                        <span class="label-text">Password</span>
+                <fieldset class="fieldset mb-6">
+                    <label class="label flex justify-between" for="password">
+                        <span>Password</span>
                         @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}" class="label-text-alt link link-hover">Forgot password?</a>
+                            <a href="{{ route('password.request') }}" class="link link-hover text-xs">Forgot password?</a>
                         @endif
                     </label>
-                    <input
-                        id="password"
-                        type="password"
-                        name="password"
-                        class="input input-bordered w-full @error('password') input-error @enderror"
-                        required
-                        autocomplete="current-password"
-                    >
-                </div>
+                    <input id="password" type="password" name="password"
+                        class="input w-full @error('password') input-error @enderror" required
+                        autocomplete="current-password">
+                </fieldset>
 
-                <div class="form-control mb-4">
+                <fieldset class="fieldset mb-4">
                     <label class="label cursor-pointer justify-start gap-3">
                         <input type="checkbox" name="remember" class="checkbox checkbox-sm" {{ old('remember') ? 'checked' : '' }}>
-                        <span class="label-text">Remember me</span>
+                        <span>Remember me</span>
                     </label>
-                </div>
+                </fieldset>
 
                 <button type="submit" class="btn btn-primary w-full">Sign In</button>
             </form>
         </div>
     </div>
 </body>
+
 </html>
