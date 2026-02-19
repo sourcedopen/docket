@@ -37,12 +37,7 @@
                 </fieldset>
 
                 <fieldset class="fieldset mb-6">
-                    <label class="label flex justify-between" for="password">
-                        <span>Password</span>
-                        @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}" class="link link-hover text-xs">Forgot password?</a>
-                        @endif
-                    </label>
+                    <label class="label" for="password">Password</label>
                     <input id="password" type="password" name="password"
                         class="input w-full @error('password') input-error @enderror" required
                         autocomplete="current-password">
