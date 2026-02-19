@@ -2,6 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Enums\CommentType;
+use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -9,15 +12,14 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class CommentFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'ticket_id' => Ticket::factory(),
+            'user_id' => User::factory(),
+            'body' => fake()->paragraph(),
+            'type' => CommentType::Update->value,
+            'is_internal' => false,
         ];
     }
 }

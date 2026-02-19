@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ContactType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -9,15 +10,17 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ContactFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'name' => fake()->name(),
+            'designation' => fake()->optional()->jobTitle(),
+            'organization' => fake()->optional()->company(),
+            'email' => fake()->optional()->safeEmail(),
+            'phone' => fake()->optional()->phoneNumber(),
+            'address' => fake()->optional()->address(),
+            'type' => fake()->randomElement(ContactType::cases())->value,
+            'notes' => fake()->optional()->sentence(),
         ];
     }
 }
