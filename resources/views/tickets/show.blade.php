@@ -1,0 +1,227 @@
+<x-layouts.app title="{{ $ticket->reference_number }} — {{ config('app.name') }}" page-title="{{ $ticket->reference_number }}">
+    @php
+        $statusColors = [
+            'draft' => 'badge-ghost',
+            'submitted' => 'badge-info',
+            'acknowledged' => 'badge-primary',
+            'in_progress' => 'badge-warning',
+            'escalated' => 'badge-error',
+            'resolved' => 'badge-success',
+            'closed' => 'badge-neutral',
+            'reopened' => 'badge-secondary',
+        ];
+        $priorityColors = ['low' => 'badge-ghost', 'medium' => 'badge-info', 'high' => 'badge-warning', 'critical' => 'badge-error'];
+    @endphp
+
+    <div class="space-y-4">
+        {{-- Header --}}
+        <div class="card bg-base-100 shadow">
+            <div class="card-body">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-mono text-sm text-base-content/60">{{ $ticket->reference_number }}</span>
+                            <span class="badge {{ $statusColors[$ticket->status->value] ?? 'badge-ghost' }}">
+                                {{ $ticket->status->label() }}
+                            </span>
+                            <span class="badge {{ $priorityColors[$ticket->priority->value] ?? 'badge-ghost' }}">
+                                {{ $ticket->priority->label() }}
+                            </span>
+                        </div>
+                        <h1 class="text-xl font-bold">{{ $ticket->title }}</h1>
+                        <div class="text-sm text-base-content/60">
+                            {{ $ticket->ticketType?->name ?? 'Unknown Type' }}
+                            @if ($ticket->filedWithContact)
+                                · Filed with <a href="{{ route('contacts.show', $ticket->filedWithContact) }}" class="link">{{ $ticket->filedWithContact->name }}</a>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        {{-- Status change dropdown --}}
+                        @if ($allowedStatuses)
+                            <div x-data="{ open: false }" class="relative">
+                                <button @click="open = !open" type="button" class="btn btn-sm btn-outline">
+                                    Change Status
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                <div x-show="open" @click.outside="open = false" class="absolute right-0 mt-1 w-48 bg-base-100 shadow-lg rounded-box border border-base-200 z-50" x-cloak>
+                                    <ul class="menu menu-sm p-2">
+                                        @foreach ($allowedStatuses as $status)
+                                            <li>
+                                                <form method="POST" action="{{ route('tickets.update', $ticket) }}">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="hidden" name="title" value="{{ $ticket->title }}">
+                                                    <input type="hidden" name="ticket_type_id" value="{{ $ticket->ticket_type_id }}">
+                                                    <input type="hidden" name="status" value="{{ $status->value }}">
+                                                    <input type="hidden" name="priority" value="{{ $ticket->priority->value }}">
+                                                    <button type="submit" class="w-full text-left">{{ $status->label() }}</button>
+                                                </form>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        @endif
+
+                        <a href="{{ route('tickets.edit', $ticket) }}" class="btn btn-sm btn-outline">Edit</a>
+
+                        <form method="POST" action="{{ route('tickets.destroy', $ticket) }}" x-data @submit.prevent="if (confirm('Delete this ticket?')) $el.submit()">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-error btn-outline">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Tabs --}}
+        <div x-data="{ tab: 'details' }">
+            <div role="tablist" class="tabs tabs-bordered">
+                <a role="tab" @click="tab = 'details'" :class="{ 'tab-active': tab === 'details' }" class="tab">Details</a>
+                <a role="tab" @click="tab = 'comments'" :class="{ 'tab-active': tab === 'comments' }" class="tab">
+                    Comments
+                    <span class="badge badge-sm ml-1">{{ $ticket->comments->count() }}</span>
+                </a>
+            </div>
+
+            {{-- Details tab --}}
+            <div x-show="tab === 'details'" class="mt-4">
+                <div class="card bg-base-100 shadow">
+                    <div class="card-body">
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <div>
+                                <div class="text-sm font-medium text-base-content/60">Filed Date</div>
+                                <div>{{ $ticket->filed_date?->format('d M Y') ?? '—' }}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-base-content/60">Due Date</div>
+                                <div>{{ $ticket->due_date?->format('d M Y') ?? '—' }}</div>
+                            </div>
+                            @if ($ticket->closed_date)
+                                <div>
+                                    <div class="text-sm font-medium text-base-content/60">Closed Date</div>
+                                    <div>{{ $ticket->closed_date->format('d M Y') }}</div>
+                                </div>
+                            @endif
+                            @if ($ticket->external_reference)
+                                <div>
+                                    <div class="text-sm font-medium text-base-content/60">External Reference</div>
+                                    <div class="font-mono">{{ $ticket->external_reference }}</div>
+                                </div>
+                            @endif
+                            <div>
+                                <div class="text-sm font-medium text-base-content/60">Created By</div>
+                                <div>{{ $ticket->user?->name ?? '—' }}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-base-content/60">Created At</div>
+                                <div>{{ $ticket->created_at->format('d M Y H:i') }}</div>
+                            </div>
+                        </div>
+
+                        @if ($ticket->description)
+                            <div class="divider"></div>
+                            <div>
+                                <div class="text-sm font-medium text-base-content/60 mb-2">Description</div>
+                                <div class="prose max-w-none">{{ $ticket->description }}</div>
+                            </div>
+                        @endif
+
+                        @if ($ticket->custom_fields && count($ticket->custom_fields) > 0)
+                            <div class="divider"></div>
+                            <div>
+                                <div class="text-sm font-medium text-base-content/60 mb-3">Custom Fields</div>
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    @foreach ($ticket->custom_fields as $key => $value)
+                                        @if ($value !== null && $value !== '')
+                                            <div>
+                                                <div class="text-sm font-medium text-base-content/60">{{ ucwords(str_replace('_', ' ', $key)) }}</div>
+                                                <div>{{ $value }}</div>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Comments tab --}}
+            <div x-show="tab === 'comments'" class="mt-4 space-y-4">
+                {{-- Existing comments --}}
+                @forelse ($ticket->comments as $comment)
+                    <div class="card bg-base-100 shadow">
+                        <div class="card-body py-3">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="font-medium text-sm">{{ $comment->user?->name ?? 'Unknown' }}</div>
+                                    <span class="badge badge-outline badge-xs">{{ $comment->type->label() }}</span>
+                                    <span class="text-xs text-base-content/50">{{ $comment->created_at->diffForHumans() }}</span>
+                                </div>
+                                <form
+                                    method="POST"
+                                    action="{{ route('tickets.comments.destroy', [$ticket, $comment]) }}"
+                                    x-data
+                                    @submit.prevent="if (confirm('Delete this comment?')) $el.submit()"
+                                >
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-xs btn-ghost text-error">Delete</button>
+                                </form>
+                            </div>
+                            <div class="mt-1 text-sm whitespace-pre-line">{{ $comment->body }}</div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center text-base-content/50 py-6">No comments yet.</div>
+                @endforelse
+
+                {{-- Add comment form --}}
+                <div class="card bg-base-100 shadow">
+                    <div class="card-body">
+                        <h3 class="font-medium mb-3">Add Comment</h3>
+                        <form method="POST" action="{{ route('tickets.comments.store', $ticket) }}">
+                            @csrf
+
+                            <div class="form-control mb-4">
+                                <select name="type" class="select select-bordered select-sm @error('type') select-error @enderror" required>
+                                    @foreach (\App\Enums\CommentType::cases() as $type)
+                                        <option value="{{ $type->value }}" {{ old('type') === $type->value ? 'selected' : '' }}>
+                                            {{ $type->label() }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('type')
+                                    <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-control mb-4">
+                                <textarea
+                                    name="body"
+                                    rows="3"
+                                    class="textarea textarea-bordered @error('body') textarea-error @enderror"
+                                    placeholder="Write your comment..."
+                                    required
+                                >{{ old('body') }}</textarea>
+                                @error('body')
+                                    <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="flex justify-end">
+                                <button type="submit" class="btn btn-primary btn-sm">Add Comment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-layouts.app>
