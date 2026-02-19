@@ -43,6 +43,21 @@ RUN echo "user = www-data" >> /usr/local/etc/php-fpm.d/docker-php-serversideup-p
     echo "group = www-data" >> /usr/local/etc/php-fpm.d/docker-php-serversideup-pool.conf
 
 ############################################
+# Node Build Stage
+############################################
+FROM node:22-alpine AS node
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY vite.config.js ./
+COPY resources ./resources
+
+RUN npm run build
+
+############################################
 # Production Image
 ############################################
 FROM base AS deploy
@@ -52,6 +67,7 @@ ENV PHP_OPCACHE_ENABLE=1
 ENV SHOW_WELCOME_MESSAGE=false
 
 COPY --chown=www-data:www-data . /var/www/html
+COPY --from=node --chown=www-data:www-data /app/public/build /var/www/html/public/build
 
 WORKDIR /var/www/html
 
