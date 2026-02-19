@@ -18,6 +18,8 @@ class StoreCommentRequest extends FormRequest
         return [
             'body' => ['required', 'string'],
             'type' => ['required', Rule::enum(CommentType::class)],
+            'files' => ['nullable', 'array'],
+            'files.*' => ['file', 'max:20480'],
         ];
     }
 }

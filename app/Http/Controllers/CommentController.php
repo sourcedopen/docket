@@ -11,11 +11,17 @@ class CommentController extends Controller
 {
     public function store(StoreCommentRequest $request, Ticket $ticket): RedirectResponse
     {
-        $ticket->comments()->create([
+        $comment = $ticket->comments()->create([
             'user_id' => auth()->id(),
             'body' => $request->validated('body'),
             'type' => $request->validated('type'),
         ]);
+
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $comment->addMedia($file)->toMediaCollection('attachments');
+            }
+        }
 
         return redirect()->route('tickets.show', $ticket)->with('success', 'Comment added.');
     }

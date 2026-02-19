@@ -2,11 +2,15 @@
     <div class="max-w-3xl">
         <div class="card bg-base-100 shadow">
             <div class="card-body">
-                <form method="POST" action="{{ route('contacts.update', $contact) }}">
+                <form method="POST" action="{{ route('contacts.update', $contact) }}" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
                     @include('contacts._form')
+
+                    <div class="mt-4">
+                        @include('partials._file_upload', ['label' => 'Documents', 'existingMedia' => $documents])
+                    </div>
 
                     <div class="card-actions justify-end mt-4">
                         <a href="{{ route('contacts.show', $contact) }}" class="btn btn-ghost">Cancel</a>

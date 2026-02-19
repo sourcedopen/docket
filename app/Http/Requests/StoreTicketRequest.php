@@ -28,6 +28,9 @@ class StoreTicketRequest extends FormRequest
             'due_date' => ['nullable', 'date'],
             'custom_fields' => ['nullable', 'array'],
             'custom_fields.*' => ['nullable'],
+            'tags' => ['nullable', 'string'],
+            'files' => ['nullable', 'array'],
+            'files.*' => ['file', 'max:20480'],
         ];
     }
 }

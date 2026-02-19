@@ -24,6 +24,8 @@ class UpdateContactRequest extends FormRequest
             'address' => ['nullable', 'string'],
             'type' => ['required', Rule::enum(ContactType::class)],
             'notes' => ['nullable', 'string'],
+            'files' => ['nullable', 'array'],
+            'files.*' => ['file', 'max:20480'],
         ];
     }
 }

@@ -2,7 +2,7 @@
     <div class="max-w-3xl">
         <div class="card bg-base-100 shadow">
             <div class="card-body">
-                <form method="POST" action="{{ route('tickets.store') }}">
+                <form method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data">
                     @csrf
 
                     <input type="hidden" name="ticket_type_id" value="{{ $ticketType->id }}">
@@ -13,6 +13,10 @@
                         <div class="divider">{{ $ticketType->name }} Fields</div>
                         @include('tickets._custom_fields', ['schema' => $schema, 'values' => old('custom_fields', [])])
                     @endif
+
+                    <div class="mt-6">
+                        @include('partials._file_upload', ['label' => 'Documents', 'existingMedia' => collect()])
+                    </div>
 
                     <div class="card-actions justify-between mt-6">
                         <a href="{{ route('tickets.create') }}" class="btn btn-ghost">Back</a>

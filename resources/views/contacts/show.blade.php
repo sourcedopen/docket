@@ -64,6 +64,30 @@
             </div>
         </div>
 
+        {{-- Documents --}}
+        @if ($documents->isNotEmpty())
+            <div class="card bg-base-100 shadow">
+                <div class="card-body">
+                    <h3 class="card-title text-lg">Documents</h3>
+                    <div class="space-y-1">
+                        @foreach ($documents as $media)
+                            <div class="flex items-center justify-between rounded-lg border border-base-200 px-3 py-2 text-sm">
+                                <a href="{{ $media->getUrl() }}" target="_blank" class="link link-hover truncate">
+                                    {{ $media->file_name }}
+                                    <span class="text-base-content/40 ml-2">{{ number_format($media->size / 1024, 1) }} KB</span>
+                                </a>
+                                <form method="POST" action="{{ route('media.destroy', $media) }}" x-data @submit.prevent="if(confirm('Delete this file?')) $el.submit()">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-xs btn-ghost text-error ml-2">Delete</button>
+                                </form>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Related tickets --}}
         <div class="card bg-base-100 shadow">
             <div class="card-body">

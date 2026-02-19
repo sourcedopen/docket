@@ -29,11 +29,15 @@
                             </span>
                         </div>
                         <h1 class="text-xl font-bold">{{ $ticket->title }}</h1>
-                        <div class="text-sm text-base-content/60">
-                            {{ $ticket->ticketType?->name ?? 'Unknown Type' }}
+                        <div class="flex flex-wrap items-center gap-2 text-sm text-base-content/60">
+                            <span>{{ $ticket->ticketType?->name ?? 'Unknown Type' }}</span>
                             @if ($ticket->filedWithContact)
-                                · Filed with <a href="{{ route('contacts.show', $ticket->filedWithContact) }}" class="link">{{ $ticket->filedWithContact->name }}</a>
+                                <span>·</span>
+                                <span>Filed with <a href="{{ route('contacts.show', $ticket->filedWithContact) }}" class="link">{{ $ticket->filedWithContact->name }}</a></span>
                             @endif
+                            @foreach ($ticket->tags as $tag)
+                                <a href="{{ route('tickets.index', ['tag' => $tag->name]) }}" class="badge badge-ghost badge-sm hover:badge-primary">{{ $tag->name }}</a>
+                            @endforeach
                         </div>
                     </div>
 
@@ -84,8 +88,8 @@
             <div role="tablist" class="tabs tabs-bordered">
                 <a role="tab" @click="tab = 'details'" :class="{ 'tab-active': tab === 'details' }" class="tab">Details</a>
                 <a role="tab" @click="tab = 'comments'" :class="{ 'tab-active': tab === 'comments' }" class="tab">
-                    Comments
-                    <span class="badge badge-sm ml-1">{{ $ticket->comments->count() }}</span>
+                    Timeline
+                    <span class="badge badge-sm ml-1">{{ $timeline->count() }}</span>
                 </a>
                 <a role="tab" @click="tab = 'reminders'" :class="{ 'tab-active': tab === 'reminders' }" class="tab">
                     Reminders
@@ -158,39 +162,103 @@
 
             {{-- Comments tab --}}
             <div x-show="tab === 'comments'" class="mt-4 space-y-4">
-                {{-- Existing comments --}}
-                @forelse ($ticket->comments as $comment)
+                {{-- Documents section --}}
+                @if ($documents->isNotEmpty())
                     <div class="card bg-base-100 shadow">
                         <div class="card-body py-3">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="font-medium text-sm">{{ $comment->user?->name ?? 'Unknown' }}</div>
-                                    <span class="badge badge-outline badge-xs">{{ $comment->type->label() }}</span>
-                                    <span class="text-xs text-base-content/50">{{ $comment->created_at->diffForHumans() }}</span>
-                                </div>
-                                <form
-                                    method="POST"
-                                    action="{{ route('tickets.comments.destroy', [$ticket, $comment]) }}"
-                                    x-data
-                                    @submit.prevent="if (confirm('Delete this comment?')) $el.submit()"
-                                >
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-xs btn-ghost text-error">Delete</button>
-                                </form>
+                            <div class="text-sm font-medium text-base-content/60 mb-2">Attached Documents</div>
+                            <div class="space-y-1">
+                                @foreach ($documents as $media)
+                                    <div class="flex items-center justify-between rounded-lg border border-base-200 px-3 py-2 text-sm">
+                                        <a href="{{ $media->getUrl() }}" target="_blank" class="link link-hover truncate">
+                                            {{ $media->file_name }}
+                                            <span class="text-base-content/40 ml-2">{{ number_format($media->size / 1024, 1) }} KB</span>
+                                        </a>
+                                        <form method="POST" action="{{ route('media.destroy', $media) }}" x-data @submit.prevent="if(confirm('Delete?')) $el.submit()">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-ghost text-error ml-2">Delete</button>
+                                        </form>
+                                    </div>
+                                @endforeach
                             </div>
-                            <div class="mt-1 text-sm whitespace-pre-line">{{ $comment->body }}</div>
                         </div>
                     </div>
+                @endif
+
+                {{-- Timeline (comments + activity merged) --}}
+                @forelse ($timeline as $entry)
+                    @if ($entry['type'] === 'comment')
+                        @php $comment = $entry['item']; @endphp
+                        <div class="card bg-base-100 shadow">
+                            <div class="card-body py-3">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="font-medium text-sm">{{ $comment->user?->name ?? 'Unknown' }}</div>
+                                        <span class="badge badge-outline badge-xs">{{ $comment->type->label() }}</span>
+                                        <span class="text-xs text-base-content/50">{{ $comment->created_at->diffForHumans() }}</span>
+                                    </div>
+                                    <form
+                                        method="POST"
+                                        action="{{ route('tickets.comments.destroy', [$ticket, $comment]) }}"
+                                        x-data
+                                        @submit.prevent="if (confirm('Delete this comment?')) $el.submit()"
+                                    >
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-xs btn-ghost text-error">Delete</button>
+                                    </form>
+                                </div>
+                                <div class="mt-1 text-sm whitespace-pre-line">{{ $comment->body }}</div>
+                                @php $commentMedia = $comment->getMedia('attachments'); @endphp
+                                @if ($commentMedia->isNotEmpty())
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        @foreach ($commentMedia as $media)
+                                            <a href="{{ $media->getUrl() }}" target="_blank" class="badge badge-outline badge-sm link link-hover">
+                                                {{ $media->file_name }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @else
+                        @php
+                            $activity = $entry['item'];
+                            $attrs = $activity->properties['attributes'] ?? [];
+                            $old = $activity->properties['old'] ?? [];
+                            $activityEventColors = ['created' => 'badge-success', 'updated' => 'badge-info', 'deleted' => 'badge-error'];
+                        @endphp
+                        <div class="flex items-start gap-3 px-1">
+                            <div class="mt-1 h-2 w-2 shrink-0 rounded-full bg-base-300 ring-4 ring-base-100"></div>
+                            <div class="text-sm text-base-content/70 pb-2">
+                                <span class="badge badge-xs {{ $activityEventColors[$activity->event] ?? 'badge-ghost' }} mr-1">{{ $activity->event }}</span>
+                                <span class="font-medium">{{ $activity->causer?->name ?? 'System' }}</span>
+                                @if (! empty($attrs))
+                                    @foreach (array_slice($attrs, 0, 3, true) as $key => $value)
+                                        @if (! in_array($key, ['updated_at', 'created_at']))
+                                            <span class="text-base-content/50 mx-1">·</span>
+                                            <span>{{ $key }}</span>
+                                            @if (isset($old[$key]))
+                                                <span class="line-through text-base-content/40">{{ Str::limit((string) $old[$key], 20) }}</span>→
+                                            @endif
+                                            <span class="font-medium">{{ Str::limit((string) $value, 25) }}</span>
+                                        @endif
+                                    @endforeach
+                                @endif
+                                <span class="text-xs text-base-content/40 ml-2">{{ $activity->created_at->diffForHumans() }}</span>
+                            </div>
+                        </div>
+                    @endif
                 @empty
-                    <div class="text-center text-base-content/50 py-6">No comments yet.</div>
+                    <div class="text-center text-base-content/50 py-6">No activity yet.</div>
                 @endforelse
 
                 {{-- Add comment form --}}
                 <div class="card bg-base-100 shadow">
                     <div class="card-body">
                         <h3 class="font-medium mb-3">Add Comment</h3>
-                        <form method="POST" action="{{ route('tickets.comments.store', $ticket) }}">
+                        <form method="POST" action="{{ route('tickets.comments.store', $ticket) }}" enctype="multipart/form-data">
                             @csrf
 
                             <div class="form-control mb-4">
@@ -217,6 +285,11 @@
                                 @error('body')
                                     <span class="label-text-alt text-error mt-1">{{ $message }}</span>
                                 @enderror
+                            </div>
+
+                            <div class="form-control mb-4">
+                                <label class="label"><span class="label-text text-sm">Attachments</span></label>
+                                <input type="file" name="files[]" multiple class="file-input file-input-bordered file-input-sm w-full">
                             </div>
 
                             <div class="flex justify-end">

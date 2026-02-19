@@ -6,6 +6,7 @@ use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
 use App\Models\Contact;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ContactController extends Controller
@@ -26,24 +27,31 @@ class ContactController extends Controller
     {
         $contact = Contact::query()->create($request->validated());
 
+        $this->handleMedia($request, $contact);
+
         return redirect()->route('contacts.show', $contact)->with('success', 'Contact created successfully.');
     }
 
     public function show(Contact $contact): View
     {
         $tickets = $contact->tickets()->with('ticketType')->latest()->paginate(10);
+        $documents = $contact->getMedia('documents');
 
-        return view('contacts.show', compact('contact', 'tickets'));
+        return view('contacts.show', compact('contact', 'tickets', 'documents'));
     }
 
     public function edit(Contact $contact): View
     {
-        return view('contacts.edit', compact('contact'));
+        $documents = $contact->getMedia('documents');
+
+        return view('contacts.edit', compact('contact', 'documents'));
     }
 
     public function update(UpdateContactRequest $request, Contact $contact): RedirectResponse
     {
         $contact->update($request->validated());
+
+        $this->handleMedia($request, $contact);
 
         return redirect()->route('contacts.show', $contact)->with('success', 'Contact updated successfully.');
     }
@@ -53,5 +61,14 @@ class ContactController extends Controller
         $contact->delete();
 
         return redirect()->route('contacts.index')->with('success', 'Contact deleted successfully.');
+    }
+
+    private function handleMedia(Request $request, Contact $contact): void
+    {
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $contact->addMedia($file)->toMediaCollection('documents');
+            }
+        }
     }
 }

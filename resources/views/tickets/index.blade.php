@@ -40,8 +40,20 @@
                         </select>
                     </div>
 
+                    <div class="form-control">
+                        <label class="label py-1"><span class="label-text text-xs">Tag</span></label>
+                        <select name="tag" class="select select-bordered select-sm">
+                            <option value="">All Tags</option>
+                            @foreach ($allTags as $tag)
+                                <option value="{{ $tag->name }}" {{ request('tag') === $tag->name ? 'selected' : '' }}>
+                                    {{ $tag->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <button type="submit" class="btn btn-sm btn-outline">Filter</button>
-                    @if (request()->hasAny(['status', 'priority', 'ticket_type_id']))
+                    @if (request()->hasAny(['status', 'priority', 'ticket_type_id', 'tag']))
                         <a href="{{ route('tickets.index') }}" class="btn btn-sm btn-ghost">Clear</a>
                     @endif
 
@@ -70,6 +82,7 @@
                                 <th>Status</th>
                                 <th>Priority</th>
                                 <th>Filed With</th>
+                                <th>Tags</th>
                                 <th>Due</th>
                                 <th class="text-right">Actions</th>
                             </tr>
@@ -114,6 +127,11 @@
                                         </span>
                                     </td>
                                     <td>{{ $ticket->filedWithContact?->name ?? '—' }}</td>
+                                    <td>
+                                        @foreach ($ticket->tags as $tag)
+                                            <a href="{{ route('tickets.index', ['tag' => $tag->name]) }}" class="badge badge-ghost badge-sm hover:badge-primary">{{ $tag->name }}</a>
+                                        @endforeach
+                                    </td>
                                     <td>{{ $ticket->due_date?->format('d M Y') ?? '—' }}</td>
                                     <td class="text-right">
                                         <a href="{{ route('tickets.show', $ticket) }}" class="btn btn-sm btn-ghost">View</a>
