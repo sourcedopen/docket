@@ -14,8 +14,8 @@ it('renders successfully for authenticated users', function () {
     get('/dashboard')->assertSuccessful();
 });
 
-it('displays the welcome message', function () {
+it('displays the dashboard stats', function () {
     $this->actingAs(User::factory()->create());
 
-    get('/dashboard')->assertSee('Welcome to Open Docket');
+    get('/dashboard')->assertSee('Open Tickets')->assertSee('Overdue');
 });

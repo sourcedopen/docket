@@ -71,6 +71,7 @@
                             </div>
                         @endif
 
+                        <a href="{{ route('tickets.create', ['parent_ticket_id' => $ticket->id]) }}" class="btn btn-sm btn-outline">Create Follow-Up</a>
                         <a href="{{ route('tickets.edit', $ticket) }}" class="btn btn-sm btn-outline">Edit</a>
 
                         <form method="POST" action="{{ route('tickets.destroy', $ticket) }}" x-data @submit.prevent="if (confirm('Delete this ticket?')) $el.submit()">
@@ -154,6 +155,36 @@
                                         @endif
                                     @endforeach
                                 </div>
+                            </div>
+                        @endif
+
+                        @if ($ticket->parentTicket || $ticket->childTickets->isNotEmpty())
+                            <div class="divider"></div>
+                            <div>
+                                <div class="text-sm font-medium text-base-content/60 mb-3">Linked Tickets</div>
+                                @if ($ticket->parentTicket)
+                                    <div class="mb-2">
+                                        <span class="text-xs text-base-content/50 uppercase tracking-wide">Parent</span>
+                                        <div class="mt-1">
+                                            <a href="{{ route('tickets.show', $ticket->parentTicket) }}" class="link link-hover text-sm font-mono">{{ $ticket->parentTicket->reference_number }}</a>
+                                            <span class="text-sm text-base-content/60 ml-2">{{ $ticket->parentTicket->title }}</span>
+                                        </div>
+                                    </div>
+                                @endif
+                                @if ($ticket->childTickets->isNotEmpty())
+                                    <div>
+                                        <span class="text-xs text-base-content/50 uppercase tracking-wide">Follow-Ups</span>
+                                        <div class="mt-1 space-y-1">
+                                            @foreach ($ticket->childTickets as $child)
+                                                <div class="flex items-center gap-2 text-sm">
+                                                    <a href="{{ route('tickets.show', $child) }}" class="link link-hover font-mono">{{ $child->reference_number }}</a>
+                                                    <span class="badge badge-xs {{ $statusColors[$child->status->value] ?? 'badge-ghost' }}">{{ $child->status->label() }}</span>
+                                                    <span class="text-base-content/60 truncate">{{ $child->title }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         @endif
                     </div>

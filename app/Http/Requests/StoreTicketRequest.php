@@ -31,6 +31,7 @@ class StoreTicketRequest extends FormRequest
             'tags' => ['nullable', 'string'],
             'files' => ['nullable', 'array'],
             'files.*' => ['file', 'max:20480'],
+            'parent_ticket_id' => ['nullable', 'integer', 'exists:tickets,id'],
         ];
     }
 }

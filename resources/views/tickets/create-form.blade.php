@@ -6,6 +6,9 @@
                     @csrf
 
                     <input type="hidden" name="ticket_type_id" value="{{ $ticketType->id }}">
+                    @if ($parentTicketId)
+                        <input type="hidden" name="parent_ticket_id" value="{{ $parentTicketId }}">
+                    @endif
 
                     @include('tickets._form')
 

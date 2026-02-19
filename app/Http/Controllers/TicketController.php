@@ -12,6 +12,7 @@ use App\Services\TicketStateMachine;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Spatie\Activitylog\Models\Activity;
 use Spatie\Tags\Tag;
 
 class TicketController extends Controller
@@ -40,6 +41,31 @@ class TicketController extends Controller
             $query->withAnyTags([$request->input('tag')]);
         }
 
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('reference_number', 'like', "%{$search}%")
+                    ->orWhere('external_reference', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('filed_from')) {
+            $query->whereDate('filed_date', '>=', $request->input('filed_from'));
+        }
+
+        if ($request->filled('filed_to')) {
+            $query->whereDate('filed_date', '<=', $request->input('filed_to'));
+        }
+
+        if ($request->boolean('overdue')) {
+            $closedStatuses = [\App\Enums\TicketStatus::Resolved->value, \App\Enums\TicketStatus::Closed->value];
+            $query->whereNotNull('due_date')
+                ->whereDate('due_date', '<', today())
+                ->whereNotIn('status', $closedStatuses);
+        }
+
         $tickets = $query->paginate(20)->withQueryString();
         $ticketTypes = TicketType::query()->where('is_active', true)->orderBy('sort_order')->get();
         $allTags = Tag::query()->orderBy('order_column')->get();
@@ -47,20 +73,22 @@ class TicketController extends Controller
         return view('tickets.index', compact('tickets', 'ticketTypes', 'allTags'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $ticketTypes = TicketType::query()->where('is_active', true)->orderBy('sort_order')->get();
+        $parentTicketId = $request->integer('parent_ticket_id') ?: null;
 
-        return view('tickets.create', compact('ticketTypes'));
+        return view('tickets.create', compact('ticketTypes', 'parentTicketId'));
     }
 
-    public function createWithType(TicketType $ticketType): View
+    public function createWithType(TicketType $ticketType, Request $request): View
     {
         $contacts = Contact::query()->orderBy('name')->get();
         $allTags = Tag::query()->orderBy('order_column')->get();
         $schema = $ticketType->schema_definition ?? [];
+        $parentTicketId = $request->integer('parent_ticket_id') ?: null;
 
-        return view('tickets.create-form', compact('ticketType', 'contacts', 'schema', 'allTags'));
+        return view('tickets.create-form', compact('ticketType', 'contacts', 'schema', 'allTags', 'parentTicketId'));
     }
 
     public function store(StoreTicketRequest $request): RedirectResponse
@@ -77,12 +105,13 @@ class TicketController extends Controller
 
     public function show(Ticket $ticket): View
     {
-        $ticket->load(['ticketType', 'filedWithContact', 'comments.user', 'comments.media', 'reminders', 'tags', 'user']);
+        $ticket->load(['ticketType', 'filedWithContact', 'comments.user', 'comments.media', 'reminders', 'tags', 'user', 'parentTicket', 'childTickets.ticketType']);
         $allowedStatuses = $this->stateMachine->allowedTransitions($ticket->status);
         $documents = $ticket->getMedia('documents');
 
-        $activityItems = activity()
+        $activityItems = Activity::query()
             ->forSubject($ticket)
+            ->with('causer')
             ->latest()
             ->get();
 

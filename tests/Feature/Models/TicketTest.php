@@ -82,7 +82,7 @@ it('has many comments', function () {
 });
 
 it('has many reminders', function () {
-    $ticket = Ticket::factory()->create();
+    $ticket = Ticket::factory()->create(['due_date' => null]);
     Reminder::factory()->count(2)->create(['ticket_id' => $ticket->id]);
 
     expect($ticket->reminders)->toHaveCount(2);

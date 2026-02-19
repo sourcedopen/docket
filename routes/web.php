@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => redirect()->route('dashboard'));
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('tickets', TicketController::class);
     Route::get('/tickets/create/{ticketType}', [TicketController::class, 'createWithType'])->name('tickets.create-with-type');
