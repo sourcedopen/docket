@@ -87,6 +87,10 @@
                     Comments
                     <span class="badge badge-sm ml-1">{{ $ticket->comments->count() }}</span>
                 </a>
+                <a role="tab" @click="tab = 'reminders'" :class="{ 'tab-active': tab === 'reminders' }" class="tab">
+                    Reminders
+                    <span class="badge badge-sm ml-1">{{ $ticket->reminders->count() }}</span>
+                </a>
             </div>
 
             {{-- Details tab --}}
@@ -217,6 +221,172 @@
 
                             <div class="flex justify-end">
                                 <button type="submit" class="btn btn-primary btn-sm">Add Comment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Reminders tab --}}
+            <div x-show="tab === 'reminders'" class="mt-4 space-y-4">
+                {{-- Existing reminders --}}
+                @forelse ($ticket->reminders as $reminder)
+                    <div
+                        x-data="{ editing: false }"
+                        class="card bg-base-100 shadow"
+                    >
+                        {{-- View mode --}}
+                        <div x-show="!editing" class="card-body py-3">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="space-y-1">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="font-medium text-sm">{{ $reminder->title }}</span>
+                                        <span class="badge badge-outline badge-xs">{{ $reminder->type->label() }}</span>
+                                        @if ($reminder->is_sent)
+                                            <span class="badge badge-success badge-xs">Sent</span>
+                                        @elseif ($reminder->remind_at->isPast())
+                                            <span class="badge badge-warning badge-xs">Overdue</span>
+                                        @endif
+                                        @if ($reminder->is_recurring)
+                                            <span class="badge badge-info badge-xs">Recurring</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-sm text-base-content/60">
+                                        {{ $reminder->remind_at->format('d M Y H:i') }}
+                                    </div>
+                                    @if ($reminder->notes)
+                                        <div class="text-sm text-base-content/70">{{ $reminder->notes }}</div>
+                                    @endif
+                                </div>
+                                <div class="flex gap-1">
+                                    <button @click="editing = true" type="button" class="btn btn-xs btn-ghost">Edit</button>
+                                    <form
+                                        method="POST"
+                                        action="{{ route('tickets.reminders.destroy', [$ticket, $reminder]) }}"
+                                        x-data
+                                        @submit.prevent="if (confirm('Delete this reminder?')) $el.submit()"
+                                    >
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-xs btn-ghost text-error">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Edit mode --}}
+                        <div x-show="editing" class="card-body py-3">
+                            <form method="POST" action="{{ route('tickets.reminders.update', [$ticket, $reminder]) }}">
+                                @csrf
+                                @method('PUT')
+
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div class="form-control sm:col-span-2">
+                                        <label class="label"><span class="label-text text-sm">Title</span></label>
+                                        <input type="text" name="title" value="{{ $reminder->title }}" class="input input-bordered input-sm" required>
+                                    </div>
+                                    <div class="form-control">
+                                        <label class="label"><span class="label-text text-sm">Remind At</span></label>
+                                        <input type="datetime-local" name="remind_at" value="{{ $reminder->remind_at->format('Y-m-d\TH:i') }}" class="input input-bordered input-sm" required>
+                                    </div>
+                                    <div class="form-control">
+                                        <label class="label"><span class="label-text text-sm">Type</span></label>
+                                        <select name="type" class="select select-bordered select-sm" required>
+                                            @foreach (\App\Enums\ReminderType::cases() as $type)
+                                                <option value="{{ $type->value }}" {{ $reminder->type === $type ? 'selected' : '' }}>{{ $type->label() }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-control sm:col-span-2">
+                                        <label class="label"><span class="label-text text-sm">Notes</span></label>
+                                        <textarea name="notes" rows="2" class="textarea textarea-bordered">{{ $reminder->notes }}</textarea>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end gap-2 mt-3">
+                                    <button @click="editing = false" type="button" class="btn btn-ghost btn-sm">Cancel</button>
+                                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center text-base-content/50 py-6">No reminders yet.</div>
+                @endforelse
+
+                {{-- Add reminder form --}}
+                <div class="card bg-base-100 shadow">
+                    <div class="card-body">
+                        <h3 class="font-medium mb-3">Add Reminder</h3>
+                        <form method="POST" action="{{ route('tickets.reminders.store', $ticket) }}">
+                            @csrf
+
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div class="form-control sm:col-span-2">
+                                    <label class="label" for="reminder_title">
+                                        <span class="label-text text-sm">Title <span class="text-error">*</span></span>
+                                    </label>
+                                    <input
+                                        id="reminder_title"
+                                        type="text"
+                                        name="title"
+                                        value="{{ old('title') }}"
+                                        class="input input-bordered @error('title') input-error @enderror"
+                                        required
+                                    >
+                                    @error('title')
+                                        <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label" for="remind_at">
+                                        <span class="label-text text-sm">Remind At <span class="text-error">*</span></span>
+                                    </label>
+                                    <input
+                                        id="remind_at"
+                                        type="datetime-local"
+                                        name="remind_at"
+                                        value="{{ old('remind_at') }}"
+                                        class="input input-bordered @error('remind_at') input-error @enderror"
+                                        required
+                                    >
+                                    @error('remind_at')
+                                        <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label" for="reminder_type">
+                                        <span class="label-text text-sm">Type <span class="text-error">*</span></span>
+                                    </label>
+                                    <select id="reminder_type" name="type" class="select select-bordered @error('type') select-error @enderror" required>
+                                        @foreach (\App\Enums\ReminderType::cases() as $type)
+                                            <option value="{{ $type->value }}" {{ old('type', \App\Enums\ReminderType::Custom->value) === $type->value ? 'selected' : '' }}>
+                                                {{ $type->label() }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('type')
+                                        <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-control sm:col-span-2">
+                                    <label class="label" for="reminder_notes">
+                                        <span class="label-text text-sm">Notes</span>
+                                    </label>
+                                    <textarea
+                                        id="reminder_notes"
+                                        name="notes"
+                                        rows="2"
+                                        class="textarea textarea-bordered"
+                                    >{{ old('notes') }}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end mt-4">
+                                <button type="submit" class="btn btn-primary btn-sm">Add Reminder</button>
                             </div>
                         </form>
                     </div>

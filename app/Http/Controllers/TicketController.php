@@ -68,7 +68,7 @@ class TicketController extends Controller
 
     public function show(Ticket $ticket): View
     {
-        $ticket->load(['ticketType', 'filedWithContact', 'comments.user', 'user']);
+        $ticket->load(['ticketType', 'filedWithContact', 'comments.user', 'reminders', 'user']);
         $allowedStatuses = $this->stateMachine->allowedTransitions($ticket->status);
 
         return view('tickets.show', compact('ticket', 'allowedStatuses'));

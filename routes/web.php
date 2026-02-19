@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketTypeController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/tickets/create/{ticketType}', [TicketController::class, 'createWithType'])->name('tickets.create-with-type');
     Route::post('/tickets/{ticket}/comments', [CommentController::class, 'store'])->name('tickets.comments.store');
     Route::delete('/tickets/{ticket}/comments/{comment}', [CommentController::class, 'destroy'])->name('tickets.comments.destroy');
+
+    Route::post('/tickets/{ticket}/reminders', [ReminderController::class, 'store'])->name('tickets.reminders.store');
+    Route::put('/tickets/{ticket}/reminders/{reminder}', [ReminderController::class, 'update'])->name('tickets.reminders.update');
+    Route::delete('/tickets/{ticket}/reminders/{reminder}', [ReminderController::class, 'destroy'])->name('tickets.reminders.destroy');
 
     Route::resource('contacts', ContactController::class);
 
