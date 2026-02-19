@@ -28,8 +28,12 @@ class TicketSeeder extends Seeder
         $jio = Contact::where('name', 'Reliance Jio Customer Care')->first();
         $consumerForum = Contact::where('name', 'District Consumer Forum')->first();
         $rbiOmbudsman = Contact::where('name', 'RBI Ombudsman Office')->first();
+        $techCorp = Contact::where('name', 'TechCorp India Support')->first();
+        $municipal = Contact::where('name', 'Municipal Corporation Ward Office')->first();
 
-        // 1. Draft RTI — just started, not yet submitted
+        $tickets = [];
+
+        // 1. Draft RTI — just started, not yet submitted, no filed date, no due date
         $tickets['rti_draft'] = Ticket::firstOrCreate(
             ['reference_number' => 'TKT-2026-0001'],
             [
@@ -42,6 +46,7 @@ class TicketSeeder extends Seeder
                 'filed_with_contact_id' => $cpio?->id,
                 'filed_date' => null,
                 'due_date' => null,
+                'external_reference' => null,
                 'custom_fields' => [
                     'pio_name' => 'Shri R.K. Verma',
                     'department' => 'Ministry of Home Affairs',
@@ -50,8 +55,9 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
+        $tickets['rti_draft']->syncTags(['rti', 'procurement']);
 
-        // 2. Submitted DND complaint — awaiting acknowledgement
+        // 2. Submitted DND complaint — with external reference, awaiting acknowledgement
         $tickets['dnd_submitted'] = Ticket::firstOrCreate(
             ['reference_number' => 'TKT-2026-0002'],
             [
@@ -64,6 +70,7 @@ class TicketSeeder extends Seeder
                 'filed_with_contact_id' => $trai?->id,
                 'filed_date' => now()->subDays(3)->toDateString(),
                 'due_date' => now()->addDays(4)->toDateString(),
+                'external_reference' => 'DND-TRAI-2026-78432',
                 'custom_fields' => [
                     'operator_name' => 'Reliance Jio',
                     'complaint_number' => 'DND-2026-78432',
@@ -72,8 +79,33 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
+        $tickets['dnd_submitted']->syncTags(['telecom', 'spam', 'urgent']);
 
-        // 3. In-progress consumer complaint — actively being worked on
+        // 3. Acknowledged DND complaint — second complaint, SMS spam
+        $tickets['dnd_acknowledged'] = Ticket::firstOrCreate(
+            ['reference_number' => 'TKT-2026-0009'],
+            [
+                'user_id' => $user->id,
+                'ticket_type_id' => $dndType?->id,
+                'title' => 'Promotional SMS despite DND activation',
+                'description' => 'Receiving bulk promotional SMS from unknown senders daily. Reported multiple headers.',
+                'status' => TicketStatus::Acknowledged->value,
+                'priority' => TicketPriority::Low->value,
+                'filed_with_contact_id' => $jio?->id,
+                'filed_date' => now()->subDays(7)->toDateString(),
+                'due_date' => null,
+                'external_reference' => 'JIO-DND-2026-55123',
+                'custom_fields' => [
+                    'operator_name' => 'Reliance Jio',
+                    'complaint_number' => 'DND-2026-55123',
+                    'phone_number' => '9876543210',
+                    'type_of_violation' => 'promotional_sms',
+                ],
+            ]
+        );
+        $tickets['dnd_acknowledged']->syncTags(['telecom', 'sms']);
+
+        // 4. In-progress consumer complaint — actively being worked on, with external_reference
         $tickets['consumer_in_progress'] = Ticket::firstOrCreate(
             ['reference_number' => 'TKT-2026-0003'],
             [
@@ -86,6 +118,7 @@ class TicketSeeder extends Seeder
                 'filed_with_contact_id' => $consumerForum?->id,
                 'filed_date' => now()->subDays(20)->toDateString(),
                 'due_date' => now()->addDays(25)->toDateString(),
+                'external_reference' => 'CC/2026/0342',
                 'custom_fields' => [
                     'company_name' => 'TechCorp India Pvt Ltd',
                     'product_or_service' => 'Laptop Model X15 Pro',
@@ -94,8 +127,9 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
+        $tickets['consumer_in_progress']->syncTags(['consumer', 'electronics', 'refund']);
 
-        // 4. Escalated banking complaint — needs urgent attention
+        // 5. Escalated banking complaint — critical priority, needs urgent attention
         $tickets['banking_escalated'] = Ticket::firstOrCreate(
             ['reference_number' => 'TKT-2026-0004'],
             [
@@ -108,6 +142,7 @@ class TicketSeeder extends Seeder
                 'filed_with_contact_id' => $rbiOmbudsman?->id,
                 'filed_date' => now()->subDays(15)->toDateString(),
                 'due_date' => now()->addDays(15)->toDateString(),
+                'external_reference' => 'CMS-2026-MH-00987',
                 'custom_fields' => [
                     'bank_name' => 'State Bank of India',
                     'account_type' => 'savings',
@@ -116,8 +151,9 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
+        $tickets['banking_escalated']->syncTags(['banking', 'fraud', 'critical']);
 
-        // 5. Resolved insurance complaint — successfully closed
+        // 6. Resolved insurance complaint — successfully closed, with all date fields
         $tickets['insurance_resolved'] = Ticket::firstOrCreate(
             ['reference_number' => 'TKT-2026-0005'],
             [
@@ -131,6 +167,7 @@ class TicketSeeder extends Seeder
                 'filed_date' => now()->subDays(45)->toDateString(),
                 'due_date' => now()->subDays(30)->toDateString(),
                 'closed_date' => now()->subDays(5)->toDateString(),
+                'external_reference' => 'IGMS-2026-LF-04521',
                 'custom_fields' => [
                     'insurer_name' => 'National Insurance Co.',
                     'policy_number' => 'HLT-2024-98765',
@@ -139,8 +176,9 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
+        $tickets['insurance_resolved']->syncTags(['insurance', 'health', 'resolved']);
 
-        // 6. Closed general complaint
+        // 7. Closed general complaint — no custom fields, no external reference, no contact
         $tickets['general_closed'] = Ticket::firstOrCreate(
             ['reference_number' => 'TKT-2025-0006'],
             [
@@ -154,10 +192,13 @@ class TicketSeeder extends Seeder
                 'filed_date' => now()->subMonths(2)->toDateString(),
                 'due_date' => now()->subMonths(1)->toDateString(),
                 'closed_date' => now()->subDays(40)->toDateString(),
+                'external_reference' => null,
+                'custom_fields' => null,
             ]
         );
+        $tickets['general_closed']->syncTags(['utility', 'billing']);
 
-        // 7. Reopened RTI — first appeal filed
+        // 8. Reopened RTI — first appeal filed, has original filed date far back
         $tickets['rti_reopened'] = Ticket::firstOrCreate(
             ['reference_number' => 'TKT-2026-0007'],
             [
@@ -170,6 +211,7 @@ class TicketSeeder extends Seeder
                 'filed_with_contact_id' => $cpio?->id,
                 'filed_date' => now()->subDays(50)->toDateString(),
                 'due_date' => now()->addDays(10)->toDateString(),
+                'external_reference' => 'RTIMH/2026/00145',
                 'custom_fields' => [
                     'pio_name' => 'Shri A.K. Mishra',
                     'department' => 'Ministry of Home Affairs',
@@ -179,9 +221,10 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
+        $tickets['rti_reopened']->syncTags(['rti', 'appeal', 'police']);
 
-        // 8. Consumer complaint with parent-child relationship (sub-ticket of #3)
-        Ticket::firstOrCreate(
+        // 9. Child ticket of consumer complaint (#4) — tracks a sub-task
+        $tickets['consumer_child'] = Ticket::firstOrCreate(
             ['reference_number' => 'TKT-2026-0008'],
             [
                 'user_id' => $user->id,
@@ -190,11 +233,119 @@ class TicketSeeder extends Seeder
                 'description' => 'Sub-ticket to track the service center inspection report requested by the consumer forum.',
                 'status' => TicketStatus::Acknowledged->value,
                 'priority' => TicketPriority::Medium->value,
-                'filed_with_contact_id' => $jio?->id,
+                'filed_with_contact_id' => $techCorp?->id,
                 'filed_date' => now()->subDays(10)->toDateString(),
                 'due_date' => now()->addDays(5)->toDateString(),
+                'external_reference' => null,
                 'parent_ticket_id' => $tickets['consumer_in_progress']->id,
             ]
         );
+        $tickets['consumer_child']->syncTags(['consumer', 'follow-up']);
+
+        // 10. General complaint with no description, no contact, no custom fields — truly minimal
+        $tickets['general_minimal'] = Ticket::firstOrCreate(
+            ['reference_number' => 'TKT-2026-0010'],
+            [
+                'user_id' => $user->id,
+                'ticket_type_id' => $generalType?->id,
+                'title' => 'Parking fine dispute',
+                'description' => null,
+                'status' => TicketStatus::Draft->value,
+                'priority' => TicketPriority::Low->value,
+                'filed_with_contact_id' => null,
+                'filed_date' => null,
+                'due_date' => null,
+                'external_reference' => null,
+                'custom_fields' => null,
+            ]
+        );
+
+        // 11. Civic complaint filed with municipal body — in progress
+        $tickets['civic_in_progress'] = Ticket::firstOrCreate(
+            ['reference_number' => 'TKT-2026-0011'],
+            [
+                'user_id' => $user->id,
+                'ticket_type_id' => $generalType?->id,
+                'title' => 'Pothole on main road causing accidents',
+                'description' => 'Large pothole near Kothrud bus stop has caused at least 2 bike accidents this week. Reported on PMC portal but no action taken.',
+                'status' => TicketStatus::InProgress->value,
+                'priority' => TicketPriority::High->value,
+                'filed_with_contact_id' => $municipal?->id,
+                'filed_date' => now()->subDays(5)->toDateString(),
+                'due_date' => now()->addDays(10)->toDateString(),
+                'external_reference' => 'PMC-GRV-2026-12345',
+                'custom_fields' => null,
+            ]
+        );
+        $tickets['civic_in_progress']->syncTags(['civic', 'roads', 'safety']);
+
+        // 12. Overdue ticket — past due date, still in progress
+        $tickets['consumer_overdue'] = Ticket::firstOrCreate(
+            ['reference_number' => 'TKT-2025-0012'],
+            [
+                'user_id' => $user->id,
+                'ticket_type_id' => $consumerType?->id,
+                'title' => 'Refund not received for cancelled order',
+                'description' => 'Cancelled an online order 60 days ago. Refund of ₹3,500 still pending despite multiple follow-ups with the seller.',
+                'status' => TicketStatus::InProgress->value,
+                'priority' => TicketPriority::Medium->value,
+                'filed_with_contact_id' => null,
+                'filed_date' => now()->subDays(60)->toDateString(),
+                'due_date' => now()->subDays(15)->toDateString(),
+                'external_reference' => null,
+                'custom_fields' => [
+                    'company_name' => 'QuickShop Online',
+                    'product_or_service' => 'Electronics Accessories',
+                    'amount_involved' => 3500,
+                    'complaint_forum' => 'district',
+                ],
+            ]
+        );
+        $tickets['consumer_overdue']->syncTags(['consumer', 'refund', 'overdue']);
+
+        // 13. Soft-deleted ticket — user decided to withdraw
+        $deletedTicket = Ticket::withTrashed()->firstOrCreate(
+            ['reference_number' => 'TKT-2025-0013'],
+            [
+                'user_id' => $user->id,
+                'ticket_type_id' => $generalType?->id,
+                'title' => 'Noise complaint against neighbour — withdrawn',
+                'description' => 'Filed noise complaint but resolved amicably with neighbour. Withdrawing this ticket.',
+                'status' => TicketStatus::Draft->value,
+                'priority' => TicketPriority::Low->value,
+                'filed_with_contact_id' => null,
+                'filed_date' => now()->subDays(30)->toDateString(),
+                'due_date' => null,
+                'external_reference' => null,
+                'custom_fields' => null,
+            ]
+        );
+        if (! $deletedTicket->trashed()) {
+            $deletedTicket->delete();
+        }
+
+        // 14. Banking complaint with loan account type — different custom field values
+        $tickets['banking_loan'] = Ticket::firstOrCreate(
+            ['reference_number' => 'TKT-2026-0014'],
+            [
+                'user_id' => $user->id,
+                'ticket_type_id' => $bankingType?->id,
+                'title' => 'Excessive processing fee charged on home loan',
+                'description' => 'Bank charged ₹15,000 processing fee instead of the agreed ₹5,000 mentioned in the sanction letter.',
+                'status' => TicketStatus::Submitted->value,
+                'priority' => TicketPriority::Medium->value,
+                'filed_with_contact_id' => $rbiOmbudsman?->id,
+                'filed_date' => now()->subDays(2)->toDateString(),
+                'due_date' => now()->addDays(28)->toDateString(),
+                'external_reference' => null,
+                'custom_fields' => [
+                    'bank_name' => 'HDFC Bank',
+                    'account_type' => 'loan',
+                    'complaint_category' => 'Excessive Charges',
+                    'amount_disputed' => 10000,
+                ],
+            ]
+        );
+        $tickets['banking_loan']->syncTags(['banking', 'loan', 'charges']);
     }
 }

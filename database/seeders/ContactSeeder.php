@@ -11,6 +11,7 @@ class ContactSeeder extends Seeder
     public function run(): void
     {
         $contacts = [
+            // Authority contacts — all fields populated
             [
                 'name' => 'Central Public Information Officer',
                 'designation' => 'CPIO',
@@ -20,6 +21,7 @@ class ContactSeeder extends Seeder
                 'address' => 'North Block, New Delhi - 110001',
                 'type' => ContactType::Authority->value,
                 'notes' => 'Handles RTI applications for MHA.',
+                'tags' => ['government', 'rti'],
             ],
             [
                 'name' => 'TRAI Consumer Cell',
@@ -30,26 +32,7 @@ class ContactSeeder extends Seeder
                 'address' => 'Mahanagar Doorsanchar Bhawan, New Delhi',
                 'type' => ContactType::Authority->value,
                 'notes' => 'DND complaint registration and tracking.',
-            ],
-            [
-                'name' => 'Reliance Jio Customer Care',
-                'designation' => 'Nodal Officer',
-                'organization' => 'Reliance Jio Infocomm Ltd.',
-                'email' => 'nodal.officer@jio.com',
-                'phone' => '198',
-                'address' => null,
-                'type' => ContactType::Company->value,
-                'notes' => null,
-            ],
-            [
-                'name' => 'District Consumer Forum',
-                'designation' => 'Registrar',
-                'organization' => 'District Consumer Disputes Redressal Forum',
-                'email' => null,
-                'phone' => null,
-                'address' => 'Collectorate Complex, Pune - 411001',
-                'type' => ContactType::Department->value,
-                'notes' => 'Filing counter open Mon-Fri 10am-5pm.',
+                'tags' => ['telecom', 'dnd'],
             ],
             [
                 'name' => 'RBI Ombudsman Office',
@@ -60,7 +43,58 @@ class ContactSeeder extends Seeder
                 'address' => 'RBI Main Building, Mumbai - 400001',
                 'type' => ContactType::Authority->value,
                 'notes' => 'CMS portal: https://cms.rbi.org.in',
+                'tags' => ['banking', 'finance'],
             ],
+
+            // Company contacts — some optional fields null
+            [
+                'name' => 'Reliance Jio Customer Care',
+                'designation' => 'Nodal Officer',
+                'organization' => 'Reliance Jio Infocomm Ltd.',
+                'email' => 'nodal.officer@jio.com',
+                'phone' => '198',
+                'address' => null,
+                'type' => ContactType::Company->value,
+                'notes' => null,
+                'tags' => ['telecom', 'isp'],
+            ],
+            [
+                'name' => 'TechCorp India Support',
+                'designation' => 'Customer Support Manager',
+                'organization' => 'TechCorp India Pvt Ltd',
+                'email' => 'support@techcorp.in',
+                'phone' => '1800-123-4567',
+                'address' => 'Tech Park, Whitefield, Bangalore - 560066',
+                'type' => ContactType::Company->value,
+                'notes' => 'Laptop manufacturer. Warranty issues escalated here.',
+                'tags' => ['electronics', 'warranty'],
+            ],
+
+            // Department contacts
+            [
+                'name' => 'District Consumer Forum',
+                'designation' => 'Registrar',
+                'organization' => 'District Consumer Disputes Redressal Forum',
+                'email' => null,
+                'phone' => null,
+                'address' => 'Collectorate Complex, Pune - 411001',
+                'type' => ContactType::Department->value,
+                'notes' => 'Filing counter open Mon-Fri 10am-5pm.',
+                'tags' => ['consumer', 'legal'],
+            ],
+            [
+                'name' => 'Municipal Corporation Ward Office',
+                'designation' => 'Ward Officer',
+                'organization' => 'Pune Municipal Corporation',
+                'email' => 'ward15@pmc.gov.in',
+                'phone' => '020-25501000',
+                'address' => 'Ward Office No. 15, Kothrud, Pune',
+                'type' => ContactType::Department->value,
+                'notes' => 'Handles civic complaints for Kothrud ward.',
+                'tags' => ['civic', 'municipal'],
+            ],
+
+            // Individual contacts
             [
                 'name' => 'Rajesh Sharma',
                 'designation' => 'Advocate',
@@ -70,11 +104,50 @@ class ContactSeeder extends Seeder
                 'address' => 'B-12, Court Complex, Pune',
                 'type' => ContactType::Individual->value,
                 'notes' => 'Consumer law specialist. Consulted for escalation cases.',
+                'tags' => ['legal', 'advocate'],
+            ],
+            // Minimal data contact — only required fields
+            [
+                'name' => 'Anonymous Tipline',
+                'designation' => null,
+                'organization' => null,
+                'email' => null,
+                'phone' => '112',
+                'address' => null,
+                'type' => ContactType::Individual->value,
+                'notes' => null,
+                'tags' => [],
+            ],
+
+            // Soft-deleted contact — organization no longer relevant
+            [
+                'name' => 'Old Broadband Provider',
+                'designation' => 'Support Desk',
+                'organization' => 'ConnectNet Broadband',
+                'email' => 'support@connectnet.in',
+                'phone' => '1800-999-0000',
+                'address' => null,
+                'type' => ContactType::Company->value,
+                'notes' => 'Discontinued service. No longer needed.',
+                'tags' => ['telecom'],
+                'deleted' => true,
             ],
         ];
 
-        foreach ($contacts as $contact) {
-            Contact::firstOrCreate(['name' => $contact['name']], $contact);
+        foreach ($contacts as $data) {
+            $tags = $data['tags'] ?? [];
+            $isDeleted = $data['deleted'] ?? false;
+            unset($data['tags'], $data['deleted']);
+
+            $contact = Contact::withTrashed()->firstOrCreate(['name' => $data['name']], $data);
+
+            if ($tags) {
+                $contact->syncTags($tags);
+            }
+
+            if ($isDeleted && ! $contact->trashed()) {
+                $contact->delete();
+            }
         }
     }
 }

@@ -18,8 +18,13 @@ class ReminderSeeder extends Seeder
         $consumerTicket = Ticket::where('reference_number', 'TKT-2026-0003')->first();
         $bankingTicket = Ticket::where('reference_number', 'TKT-2026-0004')->first();
         $rtiReopenedTicket = Ticket::where('reference_number', 'TKT-2026-0007')->first();
+        $civicTicket = Ticket::where('reference_number', 'TKT-2026-0011')->first();
+        $overdueTicket = Ticket::where('reference_number', 'TKT-2025-0012')->first();
+        $bankingLoanTicket = Ticket::where('reference_number', 'TKT-2026-0014')->first();
 
         $reminders = [
+            // --- Future, not sent ---
+
             // DND — follow up if no response
             [
                 'ticket_id' => $dndTicket?->id,
@@ -32,7 +37,7 @@ class ReminderSeeder extends Seeder
                 'is_recurring' => false,
             ],
 
-            // Consumer complaint — hearing deadline
+            // Consumer complaint — hearing deadline approaching
             [
                 'ticket_id' => $consumerTicket?->id,
                 'user_id' => $user->id,
@@ -42,20 +47,6 @@ class ReminderSeeder extends Seeder
                 'notes' => 'Prepare all documents: purchase invoice, warranty card, service report, legal notice copy.',
                 'is_sent' => false,
                 'is_recurring' => false,
-            ],
-
-            // Consumer complaint — recurring weekly follow-up
-            [
-                'ticket_id' => $consumerTicket?->id,
-                'user_id' => $user->id,
-                'title' => 'Weekly check on consumer case progress',
-                'remind_at' => now()->addDays(7),
-                'type' => ReminderType::FollowUp->value,
-                'notes' => 'Review case status and check for any communication from TechCorp.',
-                'is_sent' => false,
-                'is_recurring' => true,
-                'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=MO',
-                'recurrence_ends_at' => now()->addMonths(2),
             ],
 
             // Banking — urgent deadline
@@ -82,7 +73,63 @@ class ReminderSeeder extends Seeder
                 'is_recurring' => false,
             ],
 
-            // RTI — already sent reminder (past)
+            // Civic — check repair status
+            [
+                'ticket_id' => $civicTicket?->id,
+                'user_id' => $user->id,
+                'title' => 'Check pothole repair status on site',
+                'remind_at' => now()->addDays(6),
+                'type' => ReminderType::FollowUp->value,
+                'notes' => 'Visit the location and take photos to confirm if repair work was done.',
+                'is_sent' => false,
+                'is_recurring' => false,
+            ],
+
+            // Banking loan — custom reminder with no notes
+            [
+                'ticket_id' => $bankingLoanTicket?->id,
+                'user_id' => $user->id,
+                'title' => 'Call HDFC branch regarding processing fee reversal',
+                'remind_at' => now()->addDays(3),
+                'type' => ReminderType::Custom->value,
+                'notes' => null,
+                'is_sent' => false,
+                'is_recurring' => false,
+            ],
+
+            // --- Recurring reminders ---
+
+            // Consumer complaint — recurring weekly follow-up
+            [
+                'ticket_id' => $consumerTicket?->id,
+                'user_id' => $user->id,
+                'title' => 'Weekly check on consumer case progress',
+                'remind_at' => now()->addDays(7),
+                'type' => ReminderType::FollowUp->value,
+                'notes' => 'Review case status and check for any communication from TechCorp.',
+                'is_sent' => false,
+                'is_recurring' => true,
+                'recurrence_rule' => 'FREQ=WEEKLY;BYDAY=MO',
+                'recurrence_ends_at' => now()->addMonths(2),
+            ],
+
+            // Overdue ticket — recurring bi-weekly escalation follow-up
+            [
+                'ticket_id' => $overdueTicket?->id,
+                'user_id' => $user->id,
+                'title' => 'Follow up on QuickShop refund',
+                'remind_at' => now()->addDays(3),
+                'type' => ReminderType::FollowUp->value,
+                'notes' => 'Call QuickShop and document each conversation with date and reference number.',
+                'is_sent' => false,
+                'is_recurring' => true,
+                'recurrence_rule' => 'FREQ=WEEKLY;INTERVAL=2;BYDAY=WE',
+                'recurrence_ends_at' => now()->addMonths(1),
+            ],
+
+            // --- Already sent reminders (past) ---
+
+            // RTI — past reminder, already sent
             [
                 'ticket_id' => $rtiReopenedTicket?->id,
                 'user_id' => $user->id,
@@ -94,17 +141,65 @@ class ReminderSeeder extends Seeder
                 'sent_at' => now()->subDays(18),
                 'is_recurring' => false,
             ],
+
+            // Consumer — past deadline reminder, already sent
+            [
+                'ticket_id' => $consumerTicket?->id,
+                'user_id' => $user->id,
+                'title' => 'Legal notice response period ended',
+                'remind_at' => now()->subDays(3),
+                'type' => ReminderType::DeadlineApproaching->value,
+                'notes' => '15-day legal notice response period has lapsed. Proceed with consumer forum filing.',
+                'is_sent' => true,
+                'sent_at' => now()->subDays(3),
+                'is_recurring' => false,
+            ],
+
+            // Banking — past follow-up, already sent
+            [
+                'ticket_id' => $bankingTicket?->id,
+                'user_id' => $user->id,
+                'title' => 'Check SBI investigation update',
+                'remind_at' => now()->subDays(5),
+                'type' => ReminderType::FollowUp->value,
+                'notes' => 'Call SBI branch and ask for investigation progress report.',
+                'is_sent' => true,
+                'sent_at' => now()->subDays(5),
+                'is_recurring' => false,
+            ],
+
+            // --- Soft-deleted reminder ---
+            [
+                'ticket_id' => $dndTicket?->id,
+                'user_id' => $user->id,
+                'title' => 'Duplicate reminder — removed',
+                'remind_at' => now()->addDays(2),
+                'type' => ReminderType::Custom->value,
+                'notes' => 'Created by mistake, removing.',
+                'is_sent' => false,
+                'is_recurring' => false,
+                'deleted' => true,
+            ],
         ];
 
-        foreach ($reminders as $reminder) {
-            if ($reminder['ticket_id']) {
-                Reminder::firstOrCreate(
-                    [
-                        'ticket_id' => $reminder['ticket_id'],
-                        'title' => $reminder['title'],
-                    ],
-                    $reminder
-                );
+        foreach ($reminders as $data) {
+            if (! $data['ticket_id']) {
+                continue;
+            }
+
+            $isDeleted = $data['deleted'] ?? false;
+            unset($data['deleted']);
+
+            $reminder = Reminder::withTrashed()->firstOrCreate(
+                [
+                    'ticket_id' => $data['ticket_id'],
+                    'title' => $data['title'],
+                ],
+                $data
+            );
+
+            if ($isDeleted && ! $reminder->trashed()) {
+                $reminder->delete();
             }
         }
     }
