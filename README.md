@@ -2,6 +2,8 @@
 
 A ticket management system for tracking issues, managing contacts, and coordinating support workflows. Built with Laravel 12.
 
+> **Work in progress** — The application is still under active development. Minor bugs may be present and adjustments to defaults (such as built-in ticket types, statuses, and other configuration) may change without notice.
+
 ## Features
 
 - **Ticket management** — Create and track tickets with configurable statuses, priorities, and SLA days
