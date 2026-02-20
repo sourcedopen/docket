@@ -111,7 +111,7 @@ Add to cron:
 - [Alpine.js](https://alpinejs.dev) — Interactivity
 - [Spatie Activity Log](https://spatie.be/docs/laravel-activitylog) — Audit trail
 - [Spatie Media Library](https://spatie.be/docs/laravel-medialibrary) — File attachments
-- [Spatie Tags](https://spatie.be/docs/laravel-tags) — Tagging
+- [SourcedOpen Tags](https://github.com/sourcedopen/laravel-tags) — Tagging
 - [Pest](https://pestphp.com) — Testing
 
 ## License
