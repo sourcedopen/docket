@@ -6,7 +6,7 @@ use App\Models\Reminder;
 use App\Notifications\ReminderDueNotification;
 use Illuminate\Console\Command;
 
-class SendReminders extends Command
+class SendRemindersCommand extends Command
 {
     protected $signature = 'reminders:send';
 

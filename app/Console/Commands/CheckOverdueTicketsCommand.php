@@ -7,7 +7,7 @@ use App\Models\Ticket;
 use App\Notifications\TicketOverdueNotification;
 use Illuminate\Console\Command;
 
-class CheckOverdueTickets extends Command
+class CheckOverdueTicketsCommand extends Command
 {
     protected $signature = 'tickets:check-overdue';
 
