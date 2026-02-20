@@ -6,13 +6,13 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Spatie\Tags\Tag;
+use SourcedOpen\Tags\Models\Tag;
 
 class TagController extends Controller
 {
     public function index(): View
     {
-        $tags = Tag::query()->orderBy('order_column')->get();
+        $tags = Tag::query()->orderBy('name')->get();
 
         $ticketCounts = DB::table('taggables')
             ->select('tag_id', DB::raw('count(*) as count'))
@@ -27,9 +27,15 @@ class TagController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:100'],
+            'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
 
-        Tag::findOrCreate($request->input('name'));
+        $color = $request->input('color') ?: $this->randomColor();
+
+        Tag::firstOrCreate(
+            ['name' => $request->input('name')],
+            ['color' => $color]
+        );
 
         return redirect()->route('tags.index')->with('success', 'Tag created.');
     }
@@ -39,5 +45,10 @@ class TagController extends Controller
         $tag->delete();
 
         return redirect()->route('tags.index')->with('success', 'Tag deleted.');
+    }
+
+    private function randomColor(): string
+    {
+        return sprintf('#%06X', mt_rand(0, 0xFFFFFF));
     }
 }

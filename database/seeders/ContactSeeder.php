@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\ContactType;
 use App\Models\Contact;
 use Illuminate\Database\Seeder;
+use SourcedOpen\Tags\Models\Tag;
 
 class ContactSeeder extends Seeder
 {
@@ -135,14 +136,17 @@ class ContactSeeder extends Seeder
         ];
 
         foreach ($contacts as $data) {
-            $tags = $data['tags'] ?? [];
+            $tagNames = $data['tags'] ?? [];
             $isDeleted = $data['deleted'] ?? false;
             unset($data['tags'], $data['deleted']);
 
             $contact = Contact::withTrashed()->firstOrCreate(['name' => $data['name']], $data);
 
-            if ($tags) {
-                $contact->syncTags($tags);
+            if ($tagNames) {
+                $tagIds = collect($tagNames)
+                    ->map(fn ($name) => Tag::firstOrCreate(['name' => $name], ['color' => sprintf('#%06X', mt_rand(0, 0xFFFFFF))])->id)
+                    ->toArray();
+                $contact->syncTags($tagIds);
             }
 
             if ($isDeleted && ! $contact->trashed()) {

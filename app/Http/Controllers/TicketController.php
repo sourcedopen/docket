@@ -12,8 +12,8 @@ use App\Services\TicketStateMachine;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use SourcedOpen\Tags\Models\Tag;
 use Spatie\Activitylog\Models\Activity;
-use Spatie\Tags\Tag;
 
 class TicketController extends Controller
 {
@@ -38,7 +38,8 @@ class TicketController extends Controller
         }
 
         if ($request->filled('tag')) {
-            $query->withAnyTags([$request->input('tag')]);
+            $tag = $request->input('tag');
+            $query->whereHas('tags', fn ($q) => $q->where('name', $tag));
         }
 
         if ($request->filled('search')) {
@@ -68,7 +69,7 @@ class TicketController extends Controller
 
         $tickets = $query->paginate(20)->withQueryString();
         $ticketTypes = TicketType::query()->where('is_active', true)->orderBy('sort_order')->get();
-        $allTags = Tag::query()->orderBy('order_column')->get();
+        $allTags = Tag::query()->orderBy('name')->get();
 
         return view('tickets.index', compact('tickets', 'ticketTypes', 'allTags'));
     }
@@ -84,7 +85,7 @@ class TicketController extends Controller
     public function createWithType(TicketType $ticketType, Request $request): View
     {
         $contacts = Contact::query()->orderBy('name')->get();
-        $allTags = Tag::query()->orderBy('order_column')->get();
+        $allTags = Tag::query()->orderBy('name')->get();
         $schema = $ticketType->schema_definition ?? [];
         $parentTicketId = $request->integer('parent_ticket_id') ?: null;
 
@@ -131,7 +132,7 @@ class TicketController extends Controller
         $ticket->load(['ticketType', 'tags']);
         $contacts = Contact::query()->orderBy('name')->get();
         $ticketTypes = TicketType::query()->where('is_active', true)->orderBy('sort_order')->get();
-        $allTags = Tag::query()->orderBy('order_column')->get();
+        $allTags = Tag::query()->orderBy('name')->get();
         $schema = $ticket->ticketType?->schema_definition ?? [];
         $documents = $ticket->getMedia('documents');
 
@@ -170,7 +171,10 @@ class TicketController extends Controller
         $tagNames = array_filter(
             array_map('trim', explode(',', $request->input('tags', '')))
         );
-        $ticket->syncTags($tagNames);
+        $tagIds = collect($tagNames)
+            ->map(fn ($name) => Tag::firstOrCreate(['name' => $name])->id)
+            ->toArray();
+        $ticket->syncTags($tagIds);
 
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {

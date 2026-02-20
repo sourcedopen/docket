@@ -9,6 +9,7 @@ use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use SourcedOpen\Tags\Models\Tag;
 
 class TicketSeeder extends Seeder
 {
@@ -55,7 +56,7 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
-        $tickets['rti_draft']->syncTags(['rti', 'procurement']);
+        $this->syncTags($tickets['rti_draft'], ['rti', 'procurement']);
 
         // 2. Submitted DND complaint — with external reference, awaiting acknowledgement
         $tickets['dnd_submitted'] = Ticket::firstOrCreate(
@@ -79,7 +80,7 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
-        $tickets['dnd_submitted']->syncTags(['telecom', 'spam', 'urgent']);
+        $this->syncTags($tickets['dnd_submitted'], ['telecom', 'spam', 'urgent']);
 
         // 3. Acknowledged DND complaint — second complaint, SMS spam
         $tickets['dnd_acknowledged'] = Ticket::firstOrCreate(
@@ -103,7 +104,7 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
-        $tickets['dnd_acknowledged']->syncTags(['telecom', 'sms']);
+        $this->syncTags($tickets['dnd_acknowledged'], ['telecom', 'sms']);
 
         // 4. In-progress consumer complaint — actively being worked on, with external_reference
         $tickets['consumer_in_progress'] = Ticket::firstOrCreate(
@@ -127,7 +128,7 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
-        $tickets['consumer_in_progress']->syncTags(['consumer', 'electronics', 'refund']);
+        $this->syncTags($tickets['consumer_in_progress'], ['consumer', 'electronics', 'refund']);
 
         // 5. Escalated banking complaint — critical priority, needs urgent attention
         $tickets['banking_escalated'] = Ticket::firstOrCreate(
@@ -151,7 +152,7 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
-        $tickets['banking_escalated']->syncTags(['banking', 'fraud', 'critical']);
+        $this->syncTags($tickets['banking_escalated'], ['banking', 'fraud', 'critical']);
 
         // 6. Resolved insurance complaint — successfully closed, with all date fields
         $tickets['insurance_resolved'] = Ticket::firstOrCreate(
@@ -176,7 +177,7 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
-        $tickets['insurance_resolved']->syncTags(['insurance', 'health', 'resolved']);
+        $this->syncTags($tickets['insurance_resolved'], ['insurance', 'health', 'resolved']);
 
         // 7. Closed general complaint — no custom fields, no external reference, no contact
         $tickets['general_closed'] = Ticket::firstOrCreate(
@@ -196,7 +197,7 @@ class TicketSeeder extends Seeder
                 'custom_fields' => null,
             ]
         );
-        $tickets['general_closed']->syncTags(['utility', 'billing']);
+        $this->syncTags($tickets['general_closed'], ['utility', 'billing']);
 
         // 8. Reopened RTI — first appeal filed, has original filed date far back
         $tickets['rti_reopened'] = Ticket::firstOrCreate(
@@ -221,7 +222,7 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
-        $tickets['rti_reopened']->syncTags(['rti', 'appeal', 'police']);
+        $this->syncTags($tickets['rti_reopened'], ['rti', 'appeal', 'police']);
 
         // 9. Child ticket of consumer complaint (#4) — tracks a sub-task
         $tickets['consumer_child'] = Ticket::firstOrCreate(
@@ -240,7 +241,7 @@ class TicketSeeder extends Seeder
                 'parent_ticket_id' => $tickets['consumer_in_progress']->id,
             ]
         );
-        $tickets['consumer_child']->syncTags(['consumer', 'follow-up']);
+        $this->syncTags($tickets['consumer_child'], ['consumer', 'follow-up']);
 
         // 10. General complaint with no description, no contact, no custom fields — truly minimal
         $tickets['general_minimal'] = Ticket::firstOrCreate(
@@ -277,7 +278,7 @@ class TicketSeeder extends Seeder
                 'custom_fields' => null,
             ]
         );
-        $tickets['civic_in_progress']->syncTags(['civic', 'roads', 'safety']);
+        $this->syncTags($tickets['civic_in_progress'], ['civic', 'roads', 'safety']);
 
         // 12. Overdue ticket — past due date, still in progress
         $tickets['consumer_overdue'] = Ticket::firstOrCreate(
@@ -301,7 +302,7 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
-        $tickets['consumer_overdue']->syncTags(['consumer', 'refund', 'overdue']);
+        $this->syncTags($tickets['consumer_overdue'], ['consumer', 'refund', 'overdue']);
 
         // 13. Soft-deleted ticket — user decided to withdraw
         $deletedTicket = Ticket::withTrashed()->firstOrCreate(
@@ -346,6 +347,15 @@ class TicketSeeder extends Seeder
                 ],
             ]
         );
-        $tickets['banking_loan']->syncTags(['banking', 'loan', 'charges']);
+        $this->syncTags($tickets['banking_loan'], ['banking', 'loan', 'charges']);
+    }
+
+    /** @param array<string> $names */
+    private function syncTags(Ticket $ticket, array $names): void
+    {
+        $tagIds = collect($names)
+            ->map(fn ($name) => Tag::firstOrCreate(['name' => $name], ['color' => sprintf('#%06X', mt_rand(0, 0xFFFFFF))])->id)
+            ->toArray();
+        $ticket->syncTags($tagIds);
     }
 }

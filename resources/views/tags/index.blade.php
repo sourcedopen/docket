@@ -19,6 +19,18 @@
                             <span class="label-text-alt text-error mt-1">{{ $message }}</span>
                         @enderror
                     </div>
+                    <div class="form-control">
+                        <input
+                            type="color"
+                            name="color"
+                            value="{{ old('color', '#6366f1') }}"
+                            class="input input-bordered h-10 w-16 cursor-pointer p-1"
+                            title="Pick a color (optional)"
+                        >
+                        @error('color')
+                            <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
                     <button type="submit" class="btn btn-primary">Add</button>
                 </form>
             </div>
@@ -31,8 +43,8 @@
                     <table class="table table-zebra">
                         <thead>
                             <tr>
+                                <th>Color</th>
                                 <th>Name</th>
-                                <th>Slug</th>
                                 <th>Tickets</th>
                                 <th class="text-right">Actions</th>
                             </tr>
@@ -41,11 +53,25 @@
                             @forelse ($tags as $tag)
                                 <tr>
                                     <td>
-                                        <a href="{{ route('tickets.index', ['tag' => $tag->name]) }}" class="badge badge-primary link link-hover">
+                                        @if ($tag->color)
+                                            <span
+                                                class="inline-block h-5 w-5 rounded-full border border-base-300"
+                                                style="background-color: {{ $tag->color }}"
+                                                title="{{ $tag->color }}"
+                                            ></span>
+                                        @else
+                                            <span class="text-base-content/30">—</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <a
+                                            href="{{ route('tickets.index', ['tag' => $tag->name]) }}"
+                                            class="badge link link-hover text-white"
+                                            style="background-color: {{ $tag->color ?? '#6b7280' }}"
+                                        >
                                             {{ $tag->name }}
                                         </a>
                                     </td>
-                                    <td class="font-mono text-sm">{{ $tag->slug }}</td>
                                     <td>{{ $ticketCounts[$tag->id] ?? 0 }}</td>
                                     <td class="text-right">
                                         <form method="POST" action="{{ route('tags.destroy', $tag) }}" x-data @submit.prevent="if (confirm('Delete tag {{ addslashes($tag->name) }}?')) $el.submit()">
