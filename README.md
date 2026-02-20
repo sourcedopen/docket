@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/logo.svg" alt="Open Docket" width="80">
+</p>
+
 # Open Docket
 
 A ticket management system for tracking issues, managing contacts, and coordinating support workflows. Built with Laravel 12.
