@@ -77,8 +77,9 @@
             <label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
             <aside class="bg-base-100 border-r border-base-200 w-64 min-h-full flex flex-col">
                 <div class="p-4 border-b border-base-200">
-                    <a href="{{ route('dashboard') }}" class="text-xl font-bold text-primary">
-                        Open Docket
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
+                        <img src="/logo.svg" alt="Open Docket" class="h-8 w-8">
+                        <span class="text-xl font-bold text-primary">Open Docket</span>
                     </a>
                 </div>
 
