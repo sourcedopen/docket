@@ -1,59 +1,119 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Open Docket
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A ticket management system for tracking issues, managing contacts, and coordinating support workflows. Built with Laravel 12.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Ticket management** — Create and track tickets with configurable statuses, priorities, and SLA days
+- **Custom ticket types** — Define types with custom schemas, icons, colors, and allowed status transitions
+- **Contacts** — Manage contact records with organization, designation, and communication details
+- **Comments & attachments** — Add internal or public comments with file attachments to tickets
+- **Reminders** — Schedule one-off or recurring reminders on tickets with notifications
+- **Activity log** — Full audit trail of all changes across tickets, contacts, and types
+- **Tags** — Organize tickets with a shared tag system
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.2+
+- Node.js 22+
+- Composer
 
-## Learning Laravel
+## Local Setup
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Option 1 — Laravel Herd
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+[Laravel Herd](https://herd.laravel.com) provides zero-config PHP and Nginx for macOS/Windows.
 
-## Laravel Sponsors
+1. Clone the repo into your Herd sites directory (e.g. `~/Herd/`)
+2. Run the setup script:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+composer setup
+```
 
-### Premium Partners
+3. Start the development server with all services:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+composer dev
+```
 
-## Contributing
+The app will be available at `https://docket.test`.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Option 2 — Docker
 
-## Code of Conduct
+Requires [Docker](https://www.docker.com/get-started) with Docker Compose.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. Copy the environment file:
 
-## Security Vulnerabilities
+```bash
+cp .env.example .env
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+2. Build and start the container:
+
+```bash
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up --build
+```
+
+3. In a separate terminal, run the initial setup:
+
+```bash
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --seed
+docker compose exec app npm install
+docker compose exec app npm run build
+```
+
+The app will be available at `http://localhost`.
+
+> Set `APP_PORT` in your `.env` to use a different port (default: `80`).
+
+## Development
+
+Start all development services (server, queue, log watcher, Vite):
+
+```bash
+composer dev
+```
+
+Run the test suite:
+
+```bash
+composer test
+```
+
+Seed the database with sample data:
+
+```bash
+php artisan db:seed
+```
+
+## Scheduled Tasks
+
+The following commands run on a schedule and should be registered with your system cron or process manager:
+
+| Command | Schedule | Description |
+|---|---|---|
+| `php artisan reminders:send` | Every 15 minutes | Sends notifications for due reminders |
+| `php artisan tickets:check-overdue` | Daily at 09:00 | Sends notifications for overdue tickets |
+
+Add to cron:
+
+```
+* * * * * cd /path/to/docket && php artisan schedule:run >> /dev/null 2>&1
+```
+
+## Tech Stack
+
+- [Laravel 12](https://laravel.com) — PHP framework
+- [Laravel Fortify](https://laravel.com/docs/fortify) — Authentication
+- [Tailwind CSS v4](https://tailwindcss.com) + [daisyUI](https://daisyui.com) — Styling
+- [Alpine.js](https://alpinejs.dev) — Interactivity
+- [Spatie Activity Log](https://spatie.be/docs/laravel-activitylog) — Audit trail
+- [Spatie Media Library](https://spatie.be/docs/laravel-medialibrary) — File attachments
+- [Spatie Tags](https://spatie.be/docs/laravel-tags) — Tagging
+- [Pest](https://pestphp.com) — Testing
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Open Docket is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
