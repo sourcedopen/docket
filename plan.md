@@ -544,8 +544,8 @@ Create a user via seeder only — no registration route:
 ```php
 // database/seeders/UserSeeder.php
 User::create([
-    'name' => 'Admin',
-    'email' => 'admin@example.com',
+    'name' => 'Test User',
+    'email' => 'test@example.com',
     'password' => Hash::make('password'),
 ]);
 ```
