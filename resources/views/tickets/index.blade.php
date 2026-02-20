@@ -154,7 +154,7 @@
                                     <td>{{ $ticket->filedWithContact?->name ?? '—' }}</td>
                                     <td>
                                         @foreach ($ticket->tags as $tag)
-                                            <a href="{{ route('tickets.index', ['tag' => $tag->name]) }}" class="badge badge-sm" style="background-color: {{ $tag->color ?? '#6b7280' }}; color: #fff;">{{ $tag->name }}</a>
+                                            <a href="{{ route('tickets.index', ['tag' => $tag->name]) }}" class="badge badge-sm" style="background-color: {{ $tag->color ?? '#6b7280' }}; color: #fff; border-color: rgba(255,255,255,0.25);">{{ $tag->name }}</a>
                                         @endforeach
                                     </td>
                                     <td>{{ $ticket->due_date?->format('d M Y') ?? '—' }}</td>

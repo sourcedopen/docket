@@ -67,7 +67,7 @@
                                         <a
                                             href="{{ route('tickets.index', ['tag' => $tag->name]) }}"
                                             class="badge link link-hover text-white"
-                                            style="background-color: {{ $tag->color ?? '#6b7280' }}"
+                                            style="background-color: {{ $tag->color ?? '#6b7280' }}; border-color: rgba(255,255,255,0.25);"
                                         >
                                             {{ $tag->name }}
                                         </a>

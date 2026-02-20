@@ -36,7 +36,7 @@
                                 <span>Filed with <a href="{{ route('contacts.show', $ticket->filedWithContact) }}" class="link">{{ $ticket->filedWithContact->name }}</a></span>
                             @endif
                             @foreach ($ticket->tags as $tag)
-                                <a href="{{ route('tickets.index', ['tag' => $tag->name]) }}" class="badge badge-sm" style="background-color: {{ $tag->color ?? '#6b7280' }}; color: #fff;">{{ $tag->name }}</a>
+                                <a href="{{ route('tickets.index', ['tag' => $tag->name]) }}" class="badge badge-sm" style="background-color: {{ $tag->color ?? '#6b7280' }}; color: #fff; border-color: rgba(255,255,255,0.25);">{{ $tag->name }}</a>
                             @endforeach
                         </div>
                     </div>
