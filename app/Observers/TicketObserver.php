@@ -16,7 +16,7 @@ class TicketObserver
     public function creating(Ticket $ticket): void
     {
         if (empty($ticket->reference_number)) {
-            $ticket->reference_number = $this->referenceNumberGenerator->generate();
+            $ticket->reference_number = $this->referenceNumberGenerator->generate($ticket);
         }
 
         if ($ticket->due_date === null && $ticket->filed_date !== null) {
