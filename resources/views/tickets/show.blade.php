@@ -198,21 +198,7 @@
                     <div class="card bg-base-100 shadow">
                         <div class="card-body py-3">
                             <div class="text-sm font-medium text-base-content/60 mb-2">Attached Documents</div>
-                            <div class="space-y-1">
-                                @foreach ($documents as $media)
-                                    <div class="flex items-center justify-between rounded-lg border border-base-200 px-3 py-2 text-sm">
-                                        <a href="{{ $media->getUrl() }}" target="_blank" class="link link-hover truncate">
-                                            {{ $media->file_name }}
-                                            <span class="text-base-content/40 ml-2">{{ number_format($media->size / 1024, 1) }} KB</span>
-                                        </a>
-                                        <form method="POST" action="{{ route('media.destroy', $media) }}" x-data @submit.prevent="if(confirm('Delete?')) $el.submit()">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-xs btn-ghost text-error ml-2">Delete</button>
-                                        </form>
-                                    </div>
-                                @endforeach
-                            </div>
+                            <x-attachment-list :media="$documents" />
                         </div>
                     </div>
                 @endif
@@ -243,12 +229,8 @@
                                 <div class="mt-1 text-sm whitespace-pre-line">{{ $comment->body }}</div>
                                 @php $commentMedia = $comment->getMedia('attachments'); @endphp
                                 @if ($commentMedia->isNotEmpty())
-                                    <div class="mt-2 flex flex-wrap gap-2">
-                                        @foreach ($commentMedia as $media)
-                                            <a href="{{ $media->getUrl() }}" target="_blank" class="badge badge-outline badge-sm link link-hover">
-                                                {{ $media->file_name }}
-                                            </a>
-                                        @endforeach
+                                    <div class="mt-2">
+                                        <x-attachment-list :media="$commentMedia" compact :show-delete="false" />
                                     </div>
                                 @endif
                             </div>

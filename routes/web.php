@@ -34,5 +34,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/activity', [App\Http\Controllers\ActivityController::class, 'index'])->name('activity.index');
 
+    Route::get('/media/{media}/download', [MediaController::class, 'download'])->name('media.download');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
 });

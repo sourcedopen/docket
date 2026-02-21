@@ -168,5 +168,74 @@
             </aside>
         </div>
     </div>
+    {{-- Global attachment preview panel --}}
+    <div
+        x-data="{ open: false, url: '', name: '', mimeType: '', downloadUrl: '' }"
+        @open-preview.window="open = true; url = $event.detail.url; name = $event.detail.name; mimeType = $event.detail.mimeType; downloadUrl = $event.detail.downloadUrl"
+    >
+        {{-- Backdrop --}}
+        <div
+            x-show="open"
+            x-transition:enter="transition-opacity duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition-opacity duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 z-40 bg-black/40"
+            @click="open = false"
+            x-cloak
+        ></div>
+
+        {{-- Slide-over panel --}}
+        <div
+            x-show="open"
+            x-transition:enter="transition-transform duration-200 ease-out"
+            x-transition:enter-start="translate-x-full"
+            x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition-transform duration-150 ease-in"
+            x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="translate-x-full"
+            class="fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col bg-base-100 shadow-2xl border-l border-base-200"
+            x-cloak
+        >
+            {{-- Header --}}
+            <div class="flex items-center justify-between gap-3 border-b border-base-200 px-4 py-3 shrink-0">
+                <span class="truncate text-sm font-medium" x-text="name"></span>
+                <div class="flex items-center gap-2 shrink-0">
+                    <a :href="downloadUrl" class="btn btn-xs btn-outline gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Download
+                    </a>
+                    <button type="button" @click="open = false" class="btn btn-xs btn-ghost btn-square">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Preview --}}
+            <div class="flex-1 overflow-auto p-4">
+                <template x-if="mimeType.startsWith('image/')">
+                    <img :src="url" :alt="name" class="max-w-full h-auto rounded">
+                </template>
+                <template x-if="mimeType === 'application/pdf'">
+                    <iframe :src="url" class="w-full rounded border border-base-200" style="height: calc(100vh - 7rem);" frameborder="0"></iframe>
+                </template>
+                <template x-if="!mimeType.startsWith('image/') && mimeType !== 'application/pdf'">
+                    <div class="flex flex-col items-center justify-center gap-4 py-20 text-base-content/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p class="text-sm">No preview available for this file type</p>
+                        <a :href="downloadUrl" class="btn btn-primary btn-sm">Download file</a>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
