@@ -41,8 +41,8 @@ it('casts date fields', function () {
         'due_date' => '2026-02-14',
     ]);
 
-    expect($ticket->fresh()->filed_date)->toBeInstanceOf(\Illuminate\Support\Carbon::class)
-        ->and($ticket->fresh()->due_date)->toBeInstanceOf(\Illuminate\Support\Carbon::class);
+    expect($ticket->fresh()->filed_date)->toBeInstanceOf(\Carbon\CarbonImmutable::class)
+        ->and($ticket->fresh()->due_date)->toBeInstanceOf(\Carbon\CarbonImmutable::class);
 });
 
 it('supports soft deletes', function () {
