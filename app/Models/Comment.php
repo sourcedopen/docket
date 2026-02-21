@@ -23,6 +23,7 @@ class Comment extends Model implements HasMedia
         'body',
         'type',
         'is_internal',
+        'commented_at',
     ];
 
     public function casts(): array
@@ -30,6 +31,7 @@ class Comment extends Model implements HasMedia
         return [
             'type' => CommentType::class,
             'is_internal' => 'boolean',
+            'commented_at' => 'datetime',
         ];
     }
 

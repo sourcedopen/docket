@@ -18,6 +18,7 @@ class StoreCommentRequest extends FormRequest
         return [
             'body' => ['required', 'string'],
             'type' => ['required', Rule::enum(CommentType::class)],
+            'commented_at' => ['required', 'date'],
             'files' => ['nullable', 'array'],
             'files.*' => ['file', 'max:20480'],
         ];

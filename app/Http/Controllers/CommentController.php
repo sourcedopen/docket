@@ -15,6 +15,7 @@ class CommentController extends Controller
             'user_id' => auth()->id(),
             'body' => $request->validated('body'),
             'type' => $request->validated('type'),
+            'commented_at' => $request->validated('commented_at'),
         ]);
 
         if ($request->hasFile('files')) {

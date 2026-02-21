@@ -20,6 +20,7 @@ class CommentFactory extends Factory
             'body' => fake()->paragraph(),
             'type' => CommentType::Update->value,
             'is_internal' => false,
+            'commented_at' => now(),
         ];
     }
 }

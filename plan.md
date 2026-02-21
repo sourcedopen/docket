@@ -169,6 +169,7 @@ comments
 │   ├── escalation — escalation record
 │   └── resolution — resolution details
 ├── is_internal (boolean, default false) — for future multi-user: hide from shared views
+├── commented_at (datetime) — user-defined timestamp; allows backdating; defaults to now() in form
 ├── created_at, updated_at
 └── deleted_at (soft deletes)
 ```

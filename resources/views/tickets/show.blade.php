@@ -227,7 +227,7 @@
                                     <div class="flex items-center gap-2">
                                         <div class="font-medium text-sm">{{ $comment->user?->name ?? 'Unknown' }}</div>
                                         <span class="badge badge-outline badge-xs">{{ $comment->type->label() }}</span>
-                                        <span class="text-xs text-base-content/50">{{ $comment->created_at->diffForHumans() }}</span>
+                                        <span class="text-xs text-base-content/50">{{ $comment->commented_at->diffForHumans() }}</span>
                                     </div>
                                     <form
                                         method="POST"
@@ -314,6 +314,20 @@
                                     required
                                 >{{ old('body') }}</textarea>
                                 @error('body')
+                                    <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-control mb-4">
+                                <label class="label"><span class="label-text text-sm">Date &amp; Time</span></label>
+                                <input
+                                    type="datetime-local"
+                                    name="commented_at"
+                                    value="{{ old('commented_at', now()->format('Y-m-d\TH:i')) }}"
+                                    class="input input-bordered input-sm @error('commented_at') input-error @enderror"
+                                    required
+                                >
+                                @error('commented_at')
                                     <span class="label-text-alt text-error mt-1">{{ $message }}</span>
                                 @enderror
                             </div>

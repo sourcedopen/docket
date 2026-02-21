@@ -117,7 +117,7 @@ class TicketController extends Controller
             ->get();
 
         $timeline = collect($ticket->comments)
-            ->map(fn ($c) => ['type' => 'comment', 'at' => $c->created_at, 'item' => $c])
+            ->map(fn ($c) => ['type' => 'comment', 'at' => $c->commented_at, 'item' => $c])
             ->merge(
                 $activityItems->map(fn ($a) => ['type' => 'activity', 'at' => $a->created_at, 'item' => $a])
             )

@@ -24,6 +24,20 @@ it('casts is_internal as boolean', function () {
     expect($comment->fresh()->is_internal)->toBeTrue();
 });
 
+it('casts commented_at as datetime', function () {
+    $date = now()->subDays(5)->startOfMinute();
+    $comment = Comment::factory()->create(['commented_at' => $date]);
+
+    expect($comment->fresh()->commented_at)->toEqual($date);
+});
+
+it('allows backdated commented_at', function () {
+    $pastDate = now()->subYear()->startOfMinute();
+    $comment = Comment::factory()->create(['commented_at' => $pastDate]);
+
+    expect($comment->fresh()->commented_at)->toEqual($pastDate);
+});
+
 it('supports soft deletes', function () {
     $comment = Comment::factory()->create();
     $comment->delete();

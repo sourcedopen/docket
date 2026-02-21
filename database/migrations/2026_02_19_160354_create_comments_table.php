@@ -15,6 +15,7 @@ return new class extends Migration
             $table->text('body');
             $table->enum('type', ['update', 'note', 'response_received', 'escalation', 'resolution'])->default('update');
             $table->boolean('is_internal')->default(false);
+            $table->datetime('commented_at');
             $table->timestamps();
             $table->softDeletes();
         });
