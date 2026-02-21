@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\ReminderType;
 use App\Models\Ticket;
+use Illuminate\Support\Facades\DB;
 
 class ReminderService
 {
@@ -23,21 +24,23 @@ class ReminderService
             ['days' => 0, 'label' => 'On deadline'],
         ];
 
-        foreach ($offsets as $offset) {
-            $remindAt = $ticket->due_date->copy()->subDays($offset['days'])->setTime(9, 0, 0);
+        DB::transaction(function () use ($ticket, $offsets) {
+            foreach ($offsets as $offset) {
+                $remindAt = $ticket->due_date->copy()->subDays($offset['days'])->setTime(9, 0, 0);
 
-            if ($remindAt->isPast()) {
-                continue;
+                if ($remindAt->isPast()) {
+                    continue;
+                }
+
+                $ticket->reminders()->create([
+                    'user_id' => $ticket->user_id,
+                    'title' => "Deadline {$offset['label']}: {$ticket->reference_number}",
+                    'remind_at' => $remindAt,
+                    'type' => ReminderType::DeadlineApproaching->value,
+                    'is_sent' => false,
+                    'is_recurring' => false,
+                ]);
             }
-
-            $ticket->reminders()->create([
-                'user_id' => $ticket->user_id,
-                'title' => "Deadline {$offset['label']}: {$ticket->reference_number}",
-                'remind_at' => $remindAt,
-                'type' => ReminderType::DeadlineApproaching->value,
-                'is_sent' => false,
-                'is_recurring' => false,
-            ]);
-        }
+        });
     }
 }

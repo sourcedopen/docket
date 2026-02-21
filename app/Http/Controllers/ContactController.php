@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateContactRequest;
 use App\Models\Contact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ContactController extends Controller
@@ -25,9 +26,12 @@ class ContactController extends Controller
 
     public function store(StoreContactRequest $request): RedirectResponse
     {
-        $contact = Contact::query()->create($request->validated());
+        $contact = DB::transaction(function () use ($request) {
+            $contact = Contact::query()->create($request->validated());
+            $this->handleMedia($request, $contact);
 
-        $this->handleMedia($request, $contact);
+            return $contact;
+        });
 
         return redirect()->route('contacts.show', $contact)->with('success', 'Contact created successfully.');
     }
@@ -49,9 +53,10 @@ class ContactController extends Controller
 
     public function update(UpdateContactRequest $request, Contact $contact): RedirectResponse
     {
-        $contact->update($request->validated());
-
-        $this->handleMedia($request, $contact);
+        DB::transaction(function () use ($request, $contact) {
+            $contact->update($request->validated());
+            $this->handleMedia($request, $contact);
+        });
 
         return redirect()->route('contacts.show', $contact)->with('success', 'Contact updated successfully.');
     }

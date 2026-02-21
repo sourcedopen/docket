@@ -11,6 +11,7 @@ use App\Models\TicketType;
 use App\Services\TicketStateMachine;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use SourcedOpen\Tags\Models\Tag;
 use Spatie\Activitylog\Models\Activity;
@@ -97,9 +98,12 @@ class TicketController extends Controller
         $data = $request->validated();
         $data['user_id'] = auth()->id();
 
-        $ticket = Ticket::query()->create($data);
+        $ticket = DB::transaction(function () use ($data, $request) {
+            $ticket = Ticket::query()->create($data);
+            $this->syncTagsAndMedia($request, $ticket, 'documents');
 
-        $this->syncTagsAndMedia($request, $ticket, 'documents');
+            return $ticket;
+        });
 
         return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket created successfully.');
     }
@@ -152,9 +156,10 @@ class TicketController extends Controller
             $data['closed_date'] = now()->toDateString();
         }
 
-        $ticket->update($data);
-
-        $this->syncTagsAndMedia($request, $ticket, 'documents');
+        DB::transaction(function () use ($data, $request, $ticket) {
+            $ticket->update($data);
+            $this->syncTagsAndMedia($request, $ticket, 'documents');
+        });
 
         return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket updated successfully.');
     }
