@@ -266,6 +266,8 @@ class CommentSeeder extends Seeder
             $isDeleted = $data['deleted'] ?? false;
             unset($data['deleted']);
 
+            $data['commented_at'] ??= $data['created_at'];
+
             $comment = Comment::withTrashed()->firstOrCreate(
                 [
                     'ticket_id' => $data['ticket_id'],
