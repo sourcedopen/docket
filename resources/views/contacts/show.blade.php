@@ -72,7 +72,7 @@
                     <div class="space-y-1">
                         @foreach ($documents as $media)
                             <div class="flex items-center justify-between rounded-lg border border-base-200 px-3 py-2 text-sm">
-                                <a href="{{ $media->getUrl() }}" target="_blank" class="link link-hover truncate">
+                                <a href="{{ $media->getTemporaryUrl() }}" target="_blank" class="link link-hover truncate">
                                     {{ $media->file_name }}
                                     <span class="text-base-content/40 ml-2">{{ number_format($media->size / 1024, 1) }} KB</span>
                                 </a>
