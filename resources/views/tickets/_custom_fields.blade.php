@@ -11,7 +11,7 @@
             </label>
 
             {{-- Text input --}}
-            <template x-if="field.type === 'text'">
+            <template x-if="field.type === 'text' || field.type === 'string'">
                 <input
                     type="text"
                     :name="'custom_fields[' + field.key + ']'"
