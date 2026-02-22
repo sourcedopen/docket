@@ -29,11 +29,22 @@
                         </a>
                         <span class="text-base-content/40 shrink-0">{{ number_format($media->size / 1024, 1) }} KB</span>
                     </div>
-                    <form method="POST" action="{{ route('media.destroy', $media) }}" x-data @submit.prevent="if(confirm('Delete this file?')) $el.submit()">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-xs btn-ghost text-error ml-2">Delete</button>
-                    </form>
+                    <button
+                        type="button"
+                        class="btn btn-xs btn-ghost text-error ml-2"
+                        x-data
+                        @click="
+                            if (confirm('Delete this file?')) {
+                                fetch('{{ route('media.destroy', $media) }}', {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Accept': 'application/json',
+                                    },
+                                }).then(() => $el.closest('.flex').remove())
+                            }
+                        "
+                    >Delete</button>
                 </div>
             @endforeach
         </div>
