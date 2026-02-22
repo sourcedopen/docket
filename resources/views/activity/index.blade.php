@@ -41,14 +41,17 @@
                                         @endphp
                                         <span class="badge badge-outline badge-sm mr-1">{{ $subjectType }}</span>
                                         @if ($activity->subject instanceof \App\Models\Ticket)
-                                            <a href="{{ route('tickets.show', $activity->subject) }}" class="link link-hover text-sm">{{ $subjectLabel }}</a>
+                                            <a href="{{ route('tickets.show', $activity->subject) }}"
+                                                class="link link-hover text-sm">{{ $subjectLabel }}</a>
                                         @elseif ($activity->subject instanceof \App\Models\Contact)
-                                            <a href="{{ route('contacts.show', $activity->subject) }}" class="link link-hover text-sm">{{ $subjectLabel }}</a>
+                                            <a href="{{ route('contacts.show', $activity->subject) }}"
+                                                class="link link-hover text-sm">{{ $subjectLabel }}</a>
                                         @else
                                             <span class="text-sm">{{ $subjectLabel }}</span>
                                         @endif
                                     @else
-                                        <span class="text-base-content/40 text-sm">{{ class_basename($activity->subject_type) }} #{{ $activity->subject_id }}</span>
+                                        <span class="text-base-content/40 text-sm">{{ class_basename($activity->subject_type) }}
+                                            #{{ $activity->subject_id }}</span>
                                     @endif
                                 </td>
                                 <td class="text-sm">{{ $activity->causer?->name ?? 'System' }}</td>
@@ -57,17 +60,18 @@
                                         $attrs = $activity->properties['attributes'] ?? [];
                                         $old = $activity->properties['old'] ?? [];
                                     @endphp
-                                    @if (! empty($attrs))
+                                    @if (!empty($attrs))
                                         <div class="space-y-0.5 text-xs">
                                             @foreach (array_slice($attrs, 0, 4, true) as $key => $value)
-                                                @if (! in_array($key, ['updated_at', 'created_at']))
+                                                @if (!in_array($key, ['updated_at', 'created_at']))
                                                     <div>
                                                         <span class="font-medium">{{ $key }}:</span>
                                                         @if (isset($old[$key]))
-                                                            <span class="line-through text-base-content/40">{{ Str::limit((string) $old[$key], 30) }}</span>
+                                                            <span
+                                                                class="line-through text-base-content/40">{{ Str::limit(is_array($old[$key]) ? json_encode($old[$key]) : (string) $old[$key], 30) }}</span>
                                                             →
                                                         @endif
-                                                        <span>{{ Str::limit((string) $value, 30) }}</span>
+                                                        <span>{{ Str::limit(is_array($value) ? json_encode($value) : (string) $value, 30) }}</span>
                                                     </div>
                                                 @endif
                                             @endforeach
