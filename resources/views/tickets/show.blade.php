@@ -249,10 +249,10 @@
                                 <span class="font-medium">{{ $activity->causer?->name ?? 'System' }}</span>
                                 @if (! empty($attrs))
                                     @foreach (array_slice($attrs, 0, 3, true) as $key => $value)
-                                        @if (! in_array($key, ['updated_at', 'created_at']))
+                                        @if (! in_array($key, ['updated_at', 'created_at']) && ! is_array($value))
                                             <span class="text-base-content/50 mx-1">·</span>
                                             <span>{{ $key }}</span>
-                                            @if (isset($old[$key]))
+                                            @if (isset($old[$key]) && ! is_array($old[$key]))
                                                 <span class="line-through text-base-content/40">{{ Str::limit((string) $old[$key], 20) }}</span>→
                                             @endif
                                             <span class="font-medium">{{ Str::limit((string) $value, 25) }}</span>

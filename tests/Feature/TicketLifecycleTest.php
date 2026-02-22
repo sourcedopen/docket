@@ -116,6 +116,29 @@ it('soft deletes a ticket', function () {
         ->and(Ticket::withTrashed()->find($ticket->id))->not->toBeNull();
 });
 
+it('shows the ticket detail page after updating custom fields', function () {
+    $user = User::factory()->create();
+    $ticket = Ticket::factory()->create([
+        'user_id' => $user->id,
+        'status' => TicketStatus::Draft,
+        'custom_fields' => ['fee_paid' => '10', 'mode_of_filing' => 'online_portal'],
+    ]);
+
+    $this->actingAs($user)
+        ->put(route('tickets.update', $ticket), [
+            'title' => $ticket->title,
+            'ticket_type_id' => $ticket->ticket_type_id,
+            'status' => TicketStatus::Draft->value,
+            'priority' => $ticket->priority->value,
+            'custom_fields' => ['fee_paid' => '20', 'mode_of_filing' => 'speed_post'],
+        ])
+        ->assertRedirect(route('tickets.show', $ticket));
+
+    $this->actingAs($user)
+        ->get(route('tickets.show', $ticket))
+        ->assertSuccessful();
+});
+
 it('creates a follow-up ticket linked to a parent', function () {
     $user = User::factory()->create();
     $parent = Ticket::factory()->create(['user_id' => $user->id]);
