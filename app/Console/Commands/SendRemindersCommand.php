@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\TicketStatus;
 use App\Models\Reminder;
 use App\Notifications\ReminderDueNotification;
 use Illuminate\Console\Command;
@@ -15,7 +16,7 @@ class SendRemindersCommand extends Command
     public function handle(): int
     {
         $reminders = Reminder::query()
-            ->with(['ticket', 'user'])
+            ->with(['ticket.childTickets', 'user'])
             ->where('is_sent', false)
             ->where('remind_at', '<=', now())
             ->whereNull('deleted_at')
@@ -25,6 +26,15 @@ class SendRemindersCommand extends Command
 
         foreach ($reminders as $reminder) {
             if ($reminder->user === null || $reminder->ticket === null) {
+                continue;
+            }
+
+            if (
+                $reminder->ticket->status === TicketStatus::Escalated
+                && $reminder->ticket->childTickets->contains(
+                    fn ($child) => ! in_array($child->status, [TicketStatus::Resolved, TicketStatus::Closed])
+                )
+            ) {
                 continue;
             }
 
