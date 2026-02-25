@@ -27,11 +27,28 @@ class TicketTypeSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'First Appeal (RTI)',
+                'slug' => 'first-appeal-rti',
+                'description' => 'First appeal under RTI Act filed with the First Appellate Authority when unsatisfied with PIO response.',
+                'default_sla_days' => 45,
+                'sort_order' => 2,
+                'schema_definition' => [
+                    'fields' => [
+                        ['key' => 'original_rti_date', 'label' => 'Original RTI Filing Date', 'type' => 'date', 'required' => true],
+                        ['key' => 'pio_name', 'label' => 'PIO Name', 'type' => 'string', 'required' => true],
+                        ['key' => 'first_appellate_authority', 'label' => 'First Appellate Authority', 'type' => 'string', 'required' => true],
+                        ['key' => 'department', 'label' => 'Department', 'type' => 'string', 'required' => false],
+                        ['key' => 'reason_for_appeal', 'label' => 'Reason for Appeal', 'type' => 'select', 'options' => ['no_response', 'incomplete_response', 'incorrect_response', 'excessive_fee', 'other'], 'required' => true],
+                        ['key' => 'pio_response_date', 'label' => 'PIO Response Date', 'type' => 'date'],
+                    ],
+                ],
+            ],
+            [
                 'name' => 'DND Complaint (TRAI)',
                 'slug' => 'dnd-complaint',
                 'description' => 'Do Not Disturb complaints filed with TRAI.',
                 'default_sla_days' => 7,
-                'sort_order' => 2,
+                'sort_order' => 3,
                 'schema_definition' => [
                     'fields' => [
                         ['key' => 'operator_name', 'label' => 'Operator Name', 'type' => 'string', 'required' => true],
@@ -46,7 +63,7 @@ class TicketTypeSeeder extends Seeder
                 'slug' => 'consumer-complaint',
                 'description' => 'Consumer grievances filed with consumer forums.',
                 'default_sla_days' => 45,
-                'sort_order' => 3,
+                'sort_order' => 4,
                 'schema_definition' => [
                     'fields' => [
                         ['key' => 'company_name', 'label' => 'Company Name', 'type' => 'string', 'required' => true],
@@ -61,7 +78,7 @@ class TicketTypeSeeder extends Seeder
                 'slug' => 'banking-ombudsman',
                 'description' => 'Banking complaints filed with RBI Ombudsman.',
                 'default_sla_days' => 30,
-                'sort_order' => 4,
+                'sort_order' => 5,
                 'schema_definition' => [
                     'fields' => [
                         ['key' => 'bank_name', 'label' => 'Bank Name', 'type' => 'string', 'required' => true],
@@ -76,7 +93,7 @@ class TicketTypeSeeder extends Seeder
                 'slug' => 'insurance-complaint',
                 'description' => 'Insurance grievances filed with IRDAI.',
                 'default_sla_days' => 15,
-                'sort_order' => 5,
+                'sort_order' => 6,
                 'schema_definition' => [
                     'fields' => [
                         ['key' => 'insurer_name', 'label' => 'Insurer Name', 'type' => 'string', 'required' => true],
@@ -91,13 +108,13 @@ class TicketTypeSeeder extends Seeder
                 'slug' => 'general-complaint',
                 'description' => 'General complaints not covered by other types.',
                 'default_sla_days' => null,
-                'sort_order' => 6,
+                'sort_order' => 7,
                 'schema_definition' => ['fields' => []],
             ],
         ];
 
         foreach ($types as $type) {
-            TicketType::firstOrCreate(['slug' => $type['slug']], $type);
+            TicketType::updateOrCreate(['slug' => $type['slug']], $type);
         }
     }
 }
