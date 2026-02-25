@@ -59,7 +59,7 @@
                             </div>
                             <div class="shrink-0 text-right">
                                 <div class="text-xs text-error font-medium">
-                                    {{ now()->diffInDays($ticket->due_date) }}d overdue
+                                    {{ (int) now()->startOfDay()->diffInDays($ticket->due_date->startOfDay()) }}d overdue
                                 </div>
                                 <div class="text-xs text-base-content/40">
                                     {{ $ticket->due_date->format('d M') }}

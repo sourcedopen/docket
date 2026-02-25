@@ -22,7 +22,7 @@ class TicketOverdueNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $daysOverdue = now()->diffInDays($this->ticket->due_date);
+        $daysOverdue = (int) now()->startOfDay()->diffInDays($this->ticket->due_date->startOfDay());
 
         return (new MailMessage)
             ->subject("Overdue: {$this->ticket->reference_number} — {$this->ticket->title}")
@@ -41,7 +41,7 @@ class TicketOverdueNotification extends Notification implements ShouldQueue
             'ticket_reference' => $this->ticket->reference_number,
             'ticket_title' => $this->ticket->title,
             'due_date' => $this->ticket->due_date->toDateString(),
-            'days_overdue' => now()->diffInDays($this->ticket->due_date),
+            'days_overdue' => (int) now()->startOfDay()->diffInDays($this->ticket->due_date->startOfDay()),
         ];
     }
 }
