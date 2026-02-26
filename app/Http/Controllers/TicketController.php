@@ -14,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use SourcedOpen\Tags\Models\Tag;
-use Spatie\Activitylog\Models\Activity;
 
 class TicketController extends Controller
 {
@@ -113,22 +112,9 @@ class TicketController extends Controller
         $ticket->load(['ticketType', 'filedWithContact', 'comments.user', 'comments.media', 'reminders', 'tags', 'user', 'parentTicket', 'childTickets.ticketType']);
         $allowedStatuses = $this->stateMachine->allowedTransitions($ticket->status);
         $documents = $ticket->getMedia('documents');
+        $comments = $ticket->comments->sortBy('commented_at')->values();
 
-        $activityItems = Activity::query()
-            ->forSubject($ticket)
-            ->with('causer')
-            ->latest()
-            ->get();
-
-        $timeline = collect($ticket->comments)
-            ->map(fn ($c) => ['type' => 'comment', 'at' => $c->commented_at, 'item' => $c])
-            ->merge(
-                $activityItems->map(fn ($a) => ['type' => 'activity', 'at' => $a->created_at, 'item' => $a])
-            )
-            ->sortByDesc('at')
-            ->values();
-
-        return view('tickets.show', compact('ticket', 'allowedStatuses', 'documents', 'timeline'));
+        return view('tickets.show', compact('ticket', 'allowedStatuses', 'documents', 'comments'));
     }
 
     public function edit(Ticket $ticket): View

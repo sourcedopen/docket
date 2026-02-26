@@ -74,9 +74,9 @@
         <div x-data="{ tab: 'details' }">
             <div role="tablist" class="tabs tabs-bordered">
                 <a role="tab" @click="tab = 'details'" :class="{ 'tab-active': tab === 'details' }" class="tab">Details</a>
-                <a role="tab" @click="tab = 'comments'" :class="{ 'tab-active': tab === 'comments' }" class="tab">
+                <a role="tab" @click="tab = 'timeline'" :class="{ 'tab-active': tab === 'timeline' }" class="tab">
                     Timeline
-                    <span class="badge badge-sm ml-1">{{ $timeline->count() }}</span>
+                    <span class="badge badge-sm ml-1">{{ $comments->count() }}</span>
                 </a>
                 <a role="tab" @click="tab = 'reminders'" :class="{ 'tab-active': tab === 'reminders' }" class="tab">
                     Reminders
@@ -177,9 +177,9 @@
                 </div>
             </div>
 
-            {{-- Comments tab --}}
-            <div x-show="tab === 'comments'" class="mt-4 space-y-4">
-                {{-- Documents section --}}
+            {{-- Timeline tab --}}
+            <div x-show="tab === 'timeline'" class="mt-4 space-y-4">
+                {{-- Ticket-level documents --}}
                 @if ($documents->isNotEmpty())
                     <div class="card bg-base-100 shadow">
                         <div class="card-body py-3">
@@ -189,11 +189,9 @@
                     </div>
                 @endif
 
-                {{-- Timeline (comments + activity merged) --}}
-                @forelse ($timeline as $entry)
-                    @if ($entry['type'] === 'comment')
-                        @php $comment = $entry['item']; @endphp
-                        <div class="card bg-base-100 shadow">
+                {{-- Comments --}}
+                @forelse ($comments as $comment)
+                        <div x-data="{ expanded: false }" class="card bg-base-100 shadow">
                             <div class="card-body py-3">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="flex items-center gap-2">
@@ -216,101 +214,85 @@
                                 @php $commentMedia = $comment->getMedia('attachments'); @endphp
                                 @if ($commentMedia->isNotEmpty())
                                     <div class="mt-2">
-                                        <x-attachment-list :media="$commentMedia" compact :show-delete="false" />
+                                        <button
+                                            type="button"
+                                            @click="expanded = !expanded"
+                                            class="btn btn-xs btn-ghost gap-1"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 transition-transform" :class="{ 'rotate-90': expanded }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                            {{ $commentMedia->count() }} {{ Str::plural('attachment', $commentMedia->count()) }}
+                                        </button>
+                                        <div x-show="expanded" x-collapse class="mt-1">
+                                            <x-attachment-list :media="$commentMedia" compact :show-delete="false" />
+                                        </div>
                                     </div>
                                 @endif
                             </div>
                         </div>
-                    @else
-                        @php
-                            $activity = $entry['item'];
-                            $attrs = $activity->properties['attributes'] ?? [];
-                            $old = $activity->properties['old'] ?? [];
-                            $activityEventColors = ['created' => 'badge-success', 'updated' => 'badge-info', 'deleted' => 'badge-error'];
-                        @endphp
-                        <div class="flex items-start gap-3 px-1">
-                            <div class="mt-1 h-2 w-2 shrink-0 rounded-full bg-base-300 ring-4 ring-base-100"></div>
-                            <div class="text-sm text-base-content/70 pb-2">
-                                <span class="badge badge-xs {{ $activityEventColors[$activity->event] ?? 'badge-ghost' }} mr-1">{{ $activity->event }}</span>
-                                <span class="font-medium">{{ $activity->causer?->name ?? 'System' }}</span>
-                                @if (! empty($attrs))
-                                    @foreach (array_slice($attrs, 0, 3, true) as $key => $value)
-                                        @if (! in_array($key, ['updated_at', 'created_at']) && ! is_array($value))
-                                            <span class="text-base-content/50 mx-1">·</span>
-                                            <span>{{ $key }}</span>
-                                            @if (isset($old[$key]) && ! is_array($old[$key]))
-                                                <span class="line-through text-base-content/40">{{ Str::limit((string) $old[$key], 20) }}</span>→
-                                            @endif
-                                            <span class="font-medium">{{ Str::limit((string) $value, 25) }}</span>
-                                        @endif
-                                    @endforeach
-                                @endif
-                                <span class="text-xs text-base-content/40 ml-2">{{ $activity->created_at->diffForHumans() }}</span>
-                            </div>
+                    @empty
+                        <div class="text-center text-base-content/50 py-6">No comments yet.</div>
+                    @endforelse
+
+                    {{-- Add comment form --}}
+                    <div class="card bg-base-100 shadow">
+                        <div class="card-body">
+                            <h3 class="font-medium mb-3">Add Comment</h3>
+                            <form method="POST" action="{{ route('tickets.comments.store', $ticket) }}" enctype="multipart/form-data">
+                                @csrf
+
+                                <div class="form-control mb-4">
+                                    <select name="type" class="select select-bordered select-sm @error('type') select-error @enderror" required>
+                                        @foreach (\App\Enums\CommentType::cases() as $type)
+                                            <option value="{{ $type->value }}" {{ old('type') === $type->value ? 'selected' : '' }}>
+                                                {{ $type->label() }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('type')
+                                        <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-control mb-4">
+                                    <textarea
+                                        name="body"
+                                        rows="3"
+                                        class="textarea textarea-bordered @error('body') textarea-error @enderror"
+                                        placeholder="Write your comment..."
+                                        required
+                                    >{{ old('body') }}</textarea>
+                                    @error('body')
+                                        <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-control mb-4">
+                                    <label class="label"><span class="label-text text-sm">Date &amp; Time</span></label>
+                                    <input
+                                        type="datetime-local"
+                                        name="commented_at"
+                                        value="{{ old('commented_at', now()->format('Y-m-d\TH:i')) }}"
+                                        class="input input-bordered input-sm @error('commented_at') input-error @enderror"
+                                        required
+                                    >
+                                    @error('commented_at')
+                                        <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-control mb-4">
+                                    <label class="label"><span class="label-text text-sm">Attachments</span></label>
+                                    <input type="file" name="files[]" multiple class="file-input file-input-bordered file-input-sm w-full">
+                                </div>
+
+                                <div class="flex justify-end">
+                                    <button type="submit" class="btn btn-primary btn-sm">Add Comment</button>
+                                </div>
+                            </form>
                         </div>
-                    @endif
-                @empty
-                    <div class="text-center text-base-content/50 py-6">No activity yet.</div>
-                @endforelse
-
-                {{-- Add comment form --}}
-                <div class="card bg-base-100 shadow">
-                    <div class="card-body">
-                        <h3 class="font-medium mb-3">Add Comment</h3>
-                        <form method="POST" action="{{ route('tickets.comments.store', $ticket) }}" enctype="multipart/form-data">
-                            @csrf
-
-                            <div class="form-control mb-4">
-                                <select name="type" class="select select-bordered select-sm @error('type') select-error @enderror" required>
-                                    @foreach (\App\Enums\CommentType::cases() as $type)
-                                        <option value="{{ $type->value }}" {{ old('type') === $type->value ? 'selected' : '' }}>
-                                            {{ $type->label() }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('type')
-                                    <span class="label-text-alt text-error mt-1">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="form-control mb-4">
-                                <textarea
-                                    name="body"
-                                    rows="3"
-                                    class="textarea textarea-bordered @error('body') textarea-error @enderror"
-                                    placeholder="Write your comment..."
-                                    required
-                                >{{ old('body') }}</textarea>
-                                @error('body')
-                                    <span class="label-text-alt text-error mt-1">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="form-control mb-4">
-                                <label class="label"><span class="label-text text-sm">Date &amp; Time</span></label>
-                                <input
-                                    type="datetime-local"
-                                    name="commented_at"
-                                    value="{{ old('commented_at', now()->format('Y-m-d\TH:i')) }}"
-                                    class="input input-bordered input-sm @error('commented_at') input-error @enderror"
-                                    required
-                                >
-                                @error('commented_at')
-                                    <span class="label-text-alt text-error mt-1">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="form-control mb-4">
-                                <label class="label"><span class="label-text text-sm">Attachments</span></label>
-                                <input type="file" name="files[]" multiple class="file-input file-input-bordered file-input-sm w-full">
-                            </div>
-
-                            <div class="flex justify-end">
-                                <button type="submit" class="btn btn-primary btn-sm">Add Comment</button>
-                            </div>
-                        </form>
                     </div>
-                </div>
             </div>
 
             {{-- Reminders tab --}}
