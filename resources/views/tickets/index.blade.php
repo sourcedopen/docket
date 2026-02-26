@@ -127,27 +127,12 @@
                                     </td>
                                     <td>{{ $ticket->ticketType?->name ?? '—' }}</td>
                                     <td>
-                                        @php
-                                            $statusColors = [
-                                                'draft' => 'badge-ghost',
-                                                'submitted' => 'badge-info',
-                                                'acknowledged' => 'badge-primary',
-                                                'in_progress' => 'badge-warning',
-                                                'escalated' => 'badge-error',
-                                                'resolved' => 'badge-success',
-                                                'closed' => 'badge-neutral',
-                                                'reopened' => 'badge-secondary',
-                                            ];
-                                        @endphp
-                                        <span class="badge badge-sm {{ $statusColors[$ticket->status->value] ?? 'badge-ghost' }}">
+                                        <span class="badge badge-sm {{ $ticket->status->color() }}">
                                             {{ $ticket->status->label() }}
                                         </span>
                                     </td>
                                     <td>
-                                        @php
-                                            $priorityColors = ['low' => 'badge-ghost', 'medium' => 'badge-info', 'high' => 'badge-warning', 'critical' => 'badge-error'];
-                                        @endphp
-                                        <span class="badge badge-sm {{ $priorityColors[$ticket->priority->value] ?? 'badge-ghost' }}">
+                                        <span class="badge badge-sm {{ $ticket->priority->color() }}">
                                             {{ $ticket->priority->label() }}
                                         </span>
                                     </td>

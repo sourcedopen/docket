@@ -1,18 +1,4 @@
 <x-layouts.app title="{{ $ticket->reference_number }} — {{ config('app.name') }}" page-title="{{ $ticket->reference_number }}">
-    @php
-        $statusColors = [
-            'draft' => 'badge-ghost',
-            'submitted' => 'badge-info',
-            'acknowledged' => 'badge-primary',
-            'in_progress' => 'badge-warning',
-            'escalated' => 'badge-error',
-            'resolved' => 'badge-success',
-            'closed' => 'badge-neutral',
-            'reopened' => 'badge-secondary',
-        ];
-        $priorityColors = ['low' => 'badge-ghost', 'medium' => 'badge-info', 'high' => 'badge-warning', 'critical' => 'badge-error'];
-    @endphp
-
     <div class="space-y-4">
         {{-- Header --}}
         <div class="card bg-base-100 shadow">
@@ -21,10 +7,10 @@
                     <div class="space-y-1">
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="font-mono text-sm text-base-content/60">{{ $ticket->reference_number }}</span>
-                            <span class="badge {{ $statusColors[$ticket->status->value] ?? 'badge-ghost' }}">
+                            <span class="badge {{ $ticket->status->color() }}">
                                 {{ $ticket->status->label() }}
                             </span>
-                            <span class="badge {{ $priorityColors[$ticket->priority->value] ?? 'badge-ghost' }}">
+                            <span class="badge {{ $ticket->priority->color() }}">
                                 {{ $ticket->priority->label() }}
                             </span>
                         </div>
@@ -178,7 +164,7 @@
                                             @foreach ($ticket->childTickets as $child)
                                                 <div class="flex items-center gap-2 text-sm">
                                                     <a href="{{ route('tickets.show', $child) }}" class="link link-hover font-mono">{{ $child->reference_number }}</a>
-                                                    <span class="badge badge-xs {{ $statusColors[$child->status->value] ?? 'badge-ghost' }}">{{ $child->status->label() }}</span>
+                                                    <span class="badge badge-xs {{ $child->status->color() }}">{{ $child->status->label() }}</span>
                                                     <span class="text-base-content/60 truncate">{{ $child->title }}</span>
                                                 </div>
                                             @endforeach

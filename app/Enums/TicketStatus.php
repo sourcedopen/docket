@@ -13,6 +13,20 @@ enum TicketStatus: string
     case Closed = 'closed';
     case Reopened = 'reopened';
 
+    public function color(): string
+    {
+        return match ($this) {
+            self::Draft => 'badge-ghost',
+            self::Submitted => 'badge-info',
+            self::Acknowledged => 'badge-primary',
+            self::InProgress => 'badge-warning',
+            self::Escalated => 'badge-error',
+            self::Resolved => 'badge-success',
+            self::Closed => 'badge-neutral',
+            self::Reopened => 'badge-secondary',
+        };
+    }
+
     public function label(): string
     {
         return match ($this) {
