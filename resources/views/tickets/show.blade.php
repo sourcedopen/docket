@@ -109,14 +109,6 @@
                                     <div class="font-mono">{{ $ticket->external_reference }}</div>
                                 </div>
                             @endif
-                            <div>
-                                <div class="text-sm font-medium text-base-content/60">Created By</div>
-                                <div>{{ $ticket->user?->name ?? '—' }}</div>
-                            </div>
-                            <div>
-                                <div class="text-sm font-medium text-base-content/60">Created At</div>
-                                <div>{{ $ticket->created_at->format('d M Y H:i') }}</div>
-                            </div>
                         </div>
 
                         @if ($ticket->description)
