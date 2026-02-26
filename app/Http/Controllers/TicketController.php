@@ -112,7 +112,7 @@ class TicketController extends Controller
         $ticket->load(['ticketType', 'filedWithContact', 'comments.user', 'comments.media', 'reminders', 'tags', 'user', 'parentTicket', 'childTickets.ticketType']);
         $allowedStatuses = $this->stateMachine->allowedTransitions($ticket->status);
         $documents = $ticket->getMedia('documents');
-        $comments = $ticket->comments->sortBy('commented_at')->values();
+        $comments = $ticket->comments->sortByDesc('commented_at')->values();
 
         return view('tickets.show', compact('ticket', 'allowedStatuses', 'documents', 'comments'));
     }

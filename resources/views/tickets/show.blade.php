@@ -179,6 +179,65 @@
 
             {{-- Timeline tab --}}
             <div x-show="tab === 'timeline'" class="mt-4 space-y-4">
+                {{-- Add comment form --}}
+                <div class="card bg-base-100 shadow">
+                    <div class="card-body">
+                        <h3 class="font-medium mb-3">Add Comment</h3>
+                        <form method="POST" action="{{ route('tickets.comments.store', $ticket) }}" enctype="multipart/form-data">
+                            @csrf
+
+                            <div class="form-control mb-4">
+                                <select name="type" class="select select-bordered select-sm @error('type') select-error @enderror" required>
+                                    @foreach (\App\Enums\CommentType::cases() as $type)
+                                        <option value="{{ $type->value }}" {{ old('type') === $type->value ? 'selected' : '' }}>
+                                            {{ $type->label() }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('type')
+                                    <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-control mb-4">
+                                <textarea
+                                    name="body"
+                                    rows="3"
+                                    class="textarea textarea-bordered @error('body') textarea-error @enderror"
+                                    placeholder="Write your comment..."
+                                    required
+                                >{{ old('body') }}</textarea>
+                                @error('body')
+                                    <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-control mb-4">
+                                <label class="label"><span class="label-text text-sm">Date &amp; Time</span></label>
+                                <input
+                                    type="datetime-local"
+                                    name="commented_at"
+                                    value="{{ old('commented_at', now()->format('Y-m-d\TH:i')) }}"
+                                    class="input input-bordered input-sm @error('commented_at') input-error @enderror"
+                                    required
+                                >
+                                @error('commented_at')
+                                    <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-control mb-4">
+                                <label class="label"><span class="label-text text-sm">Attachments</span></label>
+                                <input type="file" name="files[]" multiple class="file-input file-input-bordered file-input-sm w-full">
+                            </div>
+
+                            <div class="flex justify-end">
+                                <button type="submit" class="btn btn-primary btn-sm">Add Comment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 {{-- Ticket-level documents --}}
                 @if ($documents->isNotEmpty())
                     <div class="card bg-base-100 shadow">
@@ -191,108 +250,49 @@
 
                 {{-- Comments --}}
                 @forelse ($comments as $comment)
-                        <div x-data="{ expanded: false }" class="card bg-base-100 shadow">
-                            <div class="card-body py-3">
-                                <div class="flex items-start justify-between gap-2">
-                                    <div class="flex items-center gap-2">
-                                        <div class="font-medium text-sm">{{ $comment->user?->name ?? 'Unknown' }}</div>
-                                        <span class="badge badge-outline badge-xs">{{ $comment->type->label() }}</span>
-                                        <span class="text-xs text-base-content/50">{{ $comment->commented_at->diffForHumans() }}</span>
-                                    </div>
-                                    <form
-                                        method="POST"
-                                        action="{{ route('tickets.comments.destroy', [$ticket, $comment]) }}"
-                                        x-data
-                                        @submit.prevent="if (confirm('Delete this comment?')) $el.submit()"
-                                    >
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-xs btn-ghost text-error">Delete</button>
-                                    </form>
+                    <div x-data="{ expanded: false }" class="card bg-base-100 shadow">
+                        <div class="card-body py-3">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="font-medium text-sm">{{ $comment->user?->name ?? 'Unknown' }}</div>
+                                    <span class="badge badge-outline badge-xs">{{ $comment->type->label() }}</span>
+                                    <span class="text-xs text-base-content/50">{{ $comment->commented_at->diffForHumans() }}</span>
                                 </div>
-                                <div class="mt-1 text-sm whitespace-pre-line">{{ $comment->body }}</div>
-                                @php $commentMedia = $comment->getMedia('attachments'); @endphp
-                                @if ($commentMedia->isNotEmpty())
-                                    <div class="mt-2">
-                                        <button
-                                            type="button"
-                                            @click="expanded = !expanded"
-                                            class="btn btn-xs btn-ghost gap-1"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 transition-transform" :class="{ 'rotate-90': expanded }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                            </svg>
-                                            {{ $commentMedia->count() }} {{ Str::plural('attachment', $commentMedia->count()) }}
-                                        </button>
-                                        <div x-show="expanded" x-collapse class="mt-1">
-                                            <x-attachment-list :media="$commentMedia" compact :show-delete="false" />
-                                        </div>
-                                    </div>
-                                @endif
+                                <form
+                                    method="POST"
+                                    action="{{ route('tickets.comments.destroy', [$ticket, $comment]) }}"
+                                    x-data
+                                    @submit.prevent="if (confirm('Delete this comment?')) $el.submit()"
+                                >
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-xs btn-ghost text-error">Delete</button>
+                                </form>
                             </div>
-                        </div>
-                    @empty
-                        <div class="text-center text-base-content/50 py-6">No comments yet.</div>
-                    @endforelse
-
-                    {{-- Add comment form --}}
-                    <div class="card bg-base-100 shadow">
-                        <div class="card-body">
-                            <h3 class="font-medium mb-3">Add Comment</h3>
-                            <form method="POST" action="{{ route('tickets.comments.store', $ticket) }}" enctype="multipart/form-data">
-                                @csrf
-
-                                <div class="form-control mb-4">
-                                    <select name="type" class="select select-bordered select-sm @error('type') select-error @enderror" required>
-                                        @foreach (\App\Enums\CommentType::cases() as $type)
-                                            <option value="{{ $type->value }}" {{ old('type') === $type->value ? 'selected' : '' }}>
-                                                {{ $type->label() }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('type')
-                                        <span class="label-text-alt text-error mt-1">{{ $message }}</span>
-                                    @enderror
-                                </div>
-
-                                <div class="form-control mb-4">
-                                    <textarea
-                                        name="body"
-                                        rows="3"
-                                        class="textarea textarea-bordered @error('body') textarea-error @enderror"
-                                        placeholder="Write your comment..."
-                                        required
-                                    >{{ old('body') }}</textarea>
-                                    @error('body')
-                                        <span class="label-text-alt text-error mt-1">{{ $message }}</span>
-                                    @enderror
-                                </div>
-
-                                <div class="form-control mb-4">
-                                    <label class="label"><span class="label-text text-sm">Date &amp; Time</span></label>
-                                    <input
-                                        type="datetime-local"
-                                        name="commented_at"
-                                        value="{{ old('commented_at', now()->format('Y-m-d\TH:i')) }}"
-                                        class="input input-bordered input-sm @error('commented_at') input-error @enderror"
-                                        required
+                            <div class="mt-1 text-sm whitespace-pre-line">{{ $comment->body }}</div>
+                            @php $commentMedia = $comment->getMedia('attachments'); @endphp
+                            @if ($commentMedia->isNotEmpty())
+                                <div class="mt-2">
+                                    <button
+                                        type="button"
+                                        @click="expanded = !expanded"
+                                        class="btn btn-xs btn-ghost gap-1"
                                     >
-                                    @error('commented_at')
-                                        <span class="label-text-alt text-error mt-1">{{ $message }}</span>
-                                    @enderror
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 transition-transform" :class="{ 'rotate-90': expanded }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                        {{ $commentMedia->count() }} {{ Str::plural('attachment', $commentMedia->count()) }}
+                                    </button>
+                                    <div x-show="expanded" x-collapse class="mt-1">
+                                        <x-attachment-list :media="$commentMedia" compact :show-delete="false" />
+                                    </div>
                                 </div>
-
-                                <div class="form-control mb-4">
-                                    <label class="label"><span class="label-text text-sm">Attachments</span></label>
-                                    <input type="file" name="files[]" multiple class="file-input file-input-bordered file-input-sm w-full">
-                                </div>
-
-                                <div class="flex justify-end">
-                                    <button type="submit" class="btn btn-primary btn-sm">Add Comment</button>
-                                </div>
-                            </form>
+                            @endif
                         </div>
                     </div>
+                @empty
+                    <div class="text-center text-base-content/50 py-6">No comments yet.</div>
+                @endforelse
             </div>
 
             {{-- Reminders tab --}}
