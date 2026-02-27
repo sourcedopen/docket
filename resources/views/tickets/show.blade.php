@@ -106,7 +106,22 @@
                             @if ($ticket->external_reference)
                                 <div>
                                     <div class="text-sm font-medium text-base-content/60">External Reference</div>
-                                    <div class="font-mono">{{ $ticket->external_reference }}</div>
+                                    <div class="flex items-center gap-1 font-mono" x-data="{ copied: false }">
+                                        {{ $ticket->external_reference }}
+                                        <button
+                                            type="button"
+                                            class="cursor-pointer text-base-content/40 hover:text-base-content/80"
+                                            @click="navigator.clipboard.writeText('{{ $ticket->external_reference }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                            :title="copied ? 'Copied!' : 'Copy'"
+                                        >
+                                            <svg x-show="!copied" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                            <svg x-show="copied" x-cloak xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             @endif
                         </div>
