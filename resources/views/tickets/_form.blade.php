@@ -125,9 +125,11 @@
         class="form-control md:col-span-2"
         x-data="{
             input: '',
+            open: false,
             tags: @js(isset($ticket) ? $ticket->tags->pluck('name')->toArray() : []),
-            addTag() {
-                const trimmed = this.input.trim().replace(/,+$/, '').trim();
+            allTags: @js($allTags->pluck('name')->toArray()),
+            addTag(name) {
+                const trimmed = (name ?? this.input).trim().replace(/,+$/, '').trim();
                 if (trimmed && !this.tags.includes(trimmed)) {
                     this.tags.push(trimmed);
                 }
@@ -136,40 +138,58 @@
             removeTag(tag) {
                 this.tags = this.tags.filter(t => t !== tag);
             },
-            get tagsCsv() { return this.tags.join(','); }
+            get tagsCsv() { return this.tags.join(','); },
+            get availableTags() {
+                const q = this.input.toLowerCase();
+                return this.allTags.filter(t => !this.tags.includes(t) && (!q || t.toLowerCase().includes(q)));
+            }
         }"
+        @click.outside="open = false"
     >
         <label class="label">
             <span class="label-text font-medium">Tags</span>
             <span class="label-text-alt">Press Enter or comma to add</span>
         </label>
         <input type="hidden" name="tags" :value="tagsCsv">
-        <div class="flex flex-wrap gap-1 rounded-lg border border-base-300 p-2 min-h-[2.5rem] focus-within:border-primary">
-            <template x-for="tag in tags" :key="tag">
-                <span class="badge badge-primary gap-1">
-                    <span x-text="tag"></span>
-                    <button type="button" @click="removeTag(tag)" class="hover:text-error">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                        </svg>
-                    </button>
-                </span>
-            </template>
-            <input
-                type="text"
-                x-model="input"
-                @keydown.enter.prevent="addTag()"
-                @keydown.comma.prevent="addTag()"
-                placeholder="{{ isset($ticket) && $ticket->tags->isEmpty() || ! isset($ticket) ? 'Add tags...' : '' }}"
-                class="flex-1 min-w-[6rem] bg-transparent text-sm outline-none"
-                list="tag-suggestions"
+        <div class="relative">
+            <div
+                class="flex flex-wrap gap-1 rounded-lg border border-base-300 p-2 min-h-[2.5rem] focus-within:border-primary cursor-text"
+                @click="$refs.tagInput.focus(); open = true"
             >
+                <template x-for="tag in tags" :key="tag">
+                    <span class="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1 text-sm text-primary">
+                        <span x-text="tag"></span>
+                        <button type="button" @click.stop="removeTag(tag)" class="cursor-pointer text-primary hover:text-error">&times;</button>
+                    </span>
+                </template>
+                <input
+                    type="text"
+                    x-ref="tagInput"
+                    x-model="input"
+                    @focus="open = true"
+                    @keydown.enter.prevent="addTag()"
+                    @keydown.comma.prevent="addTag()"
+                    :placeholder="tags.length === 0 ? 'Add tags...' : ''"
+                    class="flex-1 min-w-[6rem] bg-transparent text-sm outline-none"
+                >
+            </div>
+            <div
+                x-show="open && availableTags.length > 0"
+                x-cloak
+                class="absolute z-10 mt-1 w-full rounded-lg border border-base-300 bg-base-100 p-3 shadow-lg"
+            >
+                <div class="flex flex-wrap gap-2">
+                    <template x-for="tag in availableTags" :key="tag">
+                        <button
+                            type="button"
+                            @click="addTag(tag); $refs.tagInput.focus()"
+                            class="rounded-full border border-base-300 px-3 py-1 text-sm hover:bg-base-200 transition-colors"
+                            x-text="tag"
+                        ></button>
+                    </template>
+                </div>
+            </div>
         </div>
-        <datalist id="tag-suggestions">
-            @foreach ($allTags as $tag)
-                <option value="{{ $tag->name }}">
-            @endforeach
-        </datalist>
     </div>
 
     {{-- Description --}}
