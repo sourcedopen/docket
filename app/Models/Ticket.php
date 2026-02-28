@@ -96,4 +96,9 @@ class Ticket extends Model implements HasMedia
     {
         return $this->hasMany(Reminder::class);
     }
+
+    public function costs(): HasMany
+    {
+        return $this->hasMany(Cost::class);
+    }
 }

@@ -82,6 +82,10 @@
                     Reminders
                     <span class="badge badge-sm ml-1">{{ $ticket->reminders->count() }}</span>
                 </a>
+                <a role="tab" @click="tab = 'costs'" :class="{ 'tab-active': tab === 'costs' }" class="tab">
+                    Costs
+                    <span class="badge badge-sm ml-1">{{ $ticket->costs->count() }}</span>
+                </a>
             </div>
 
             {{-- Details tab --}}
@@ -462,6 +466,152 @@
 
                             <div class="flex justify-end mt-4">
                                 <button type="submit" class="btn btn-primary btn-sm">Add Reminder</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Costs tab --}}
+            <div x-show="tab === 'costs'" class="mt-4 space-y-4">
+                {{-- Total cost summary --}}
+                @if ($ticket->costs->isNotEmpty())
+                    <div class="card bg-base-100 shadow">
+                        <div class="card-body py-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-base-content/60">Total Cost</span>
+                                <span class="text-lg font-bold">{{ number_format($totalCost, 2) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Existing costs --}}
+                @forelse ($ticket->costs as $cost)
+                    <div
+                        x-data="{ editing: false }"
+                        class="card bg-base-100 shadow"
+                    >
+                        {{-- View mode --}}
+                        <div x-show="!editing" class="card-body py-3">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="space-y-1">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="font-medium text-sm">{{ number_format($cost->amount, 2) }}</span>
+                                        <span class="text-xs text-base-content/50">{{ $cost->incurred_at->format('d M Y') }}</span>
+                                    </div>
+                                    @if ($cost->description)
+                                        <div class="text-sm text-base-content/70">{{ $cost->description }}</div>
+                                    @endif
+                                    <div class="text-xs text-base-content/50">Added by {{ $cost->user?->name ?? 'Unknown' }}</div>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button @click="editing = true" type="button" class="btn btn-xs btn-ghost">Edit</button>
+                                    <form
+                                        method="POST"
+                                        action="{{ route('tickets.costs.destroy', [$ticket, $cost]) }}"
+                                        x-data
+                                        @submit.prevent="if (confirm('Delete this cost?')) $el.submit()"
+                                    >
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-xs btn-ghost text-error">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Edit mode --}}
+                        <div x-show="editing" class="card-body py-3">
+                            <form method="POST" action="{{ route('tickets.costs.update', [$ticket, $cost]) }}">
+                                @csrf
+                                @method('PUT')
+
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div class="form-control">
+                                        <label class="label"><span class="label-text text-sm">Amount</span></label>
+                                        <input type="number" name="amount" value="{{ $cost->amount }}" step="0.01" min="0.01" class="input input-bordered input-sm" required>
+                                    </div>
+                                    <div class="form-control">
+                                        <label class="label"><span class="label-text text-sm">Date</span></label>
+                                        <input type="date" name="incurred_at" value="{{ $cost->incurred_at->format('Y-m-d') }}" class="input input-bordered input-sm" required>
+                                    </div>
+                                    <div class="form-control sm:col-span-2">
+                                        <label class="label"><span class="label-text text-sm">Description</span></label>
+                                        <textarea name="description" rows="2" class="textarea textarea-bordered">{{ $cost->description }}</textarea>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end gap-2 mt-3">
+                                    <button @click="editing = false" type="button" class="btn btn-ghost btn-sm">Cancel</button>
+                                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center text-base-content/50 py-6">No costs recorded yet.</div>
+                @endforelse
+
+                {{-- Add cost form --}}
+                <div class="card bg-base-100 shadow">
+                    <div class="card-body">
+                        <h3 class="font-medium mb-3">Add Cost</h3>
+                        <form method="POST" action="{{ route('tickets.costs.store', $ticket) }}">
+                            @csrf
+
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div class="form-control">
+                                    <label class="label" for="cost_amount">
+                                        <span class="label-text text-sm">Amount <span class="text-error">*</span></span>
+                                    </label>
+                                    <input
+                                        id="cost_amount"
+                                        type="number"
+                                        name="amount"
+                                        value="{{ old('amount') }}"
+                                        step="0.01"
+                                        min="0.01"
+                                        class="input input-bordered @error('amount') input-error @enderror"
+                                        required
+                                    >
+                                    @error('amount')
+                                        <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-control">
+                                    <label class="label" for="cost_incurred_at">
+                                        <span class="label-text text-sm">Date <span class="text-error">*</span></span>
+                                    </label>
+                                    <input
+                                        id="cost_incurred_at"
+                                        type="date"
+                                        name="incurred_at"
+                                        value="{{ old('incurred_at', now()->format('Y-m-d')) }}"
+                                        class="input input-bordered @error('incurred_at') input-error @enderror"
+                                        required
+                                    >
+                                    @error('incurred_at')
+                                        <span class="label-text-alt text-error mt-1">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-control sm:col-span-2">
+                                    <label class="label" for="cost_description">
+                                        <span class="label-text text-sm">Description</span>
+                                    </label>
+                                    <textarea
+                                        id="cost_description"
+                                        name="description"
+                                        rows="2"
+                                        class="textarea textarea-bordered"
+                                    >{{ old('description') }}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end mt-4">
+                                <button type="submit" class="btn btn-primary btn-sm">Add Cost</button>
                             </div>
                         </form>
                     </div>

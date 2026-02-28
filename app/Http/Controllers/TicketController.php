@@ -109,12 +109,13 @@ class TicketController extends Controller
 
     public function show(Ticket $ticket): View
     {
-        $ticket->load(['ticketType', 'filedWithContact', 'comments.user', 'comments.media', 'reminders', 'tags', 'user', 'parentTicket', 'childTickets.ticketType']);
+        $ticket->load(['ticketType', 'filedWithContact', 'comments.user', 'comments.media', 'reminders', 'costs.user', 'tags', 'user', 'parentTicket', 'childTickets.ticketType']);
         $allowedStatuses = $this->stateMachine->allowedTransitions($ticket->status);
         $documents = $ticket->getMedia('documents');
         $comments = $ticket->comments->sortByDesc('commented_at')->values();
+        $totalCost = $ticket->costs->sum('amount');
 
-        return view('tickets.show', compact('ticket', 'allowedStatuses', 'documents', 'comments'));
+        return view('tickets.show', compact('ticket', 'allowedStatuses', 'documents', 'comments', 'totalCost'));
     }
 
     public function edit(Ticket $ticket): View

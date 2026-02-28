@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CostController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\TagController;
@@ -22,6 +23,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/tickets/{ticket}/reminders', [ReminderController::class, 'store'])->name('tickets.reminders.store');
     Route::put('/tickets/{ticket}/reminders/{reminder}', [ReminderController::class, 'update'])->name('tickets.reminders.update');
     Route::delete('/tickets/{ticket}/reminders/{reminder}', [ReminderController::class, 'destroy'])->name('tickets.reminders.destroy');
+
+    Route::post('/tickets/{ticket}/costs', [CostController::class, 'store'])->name('tickets.costs.store');
+    Route::put('/tickets/{ticket}/costs/{cost}', [CostController::class, 'update'])->name('tickets.costs.update');
+    Route::delete('/tickets/{ticket}/costs/{cost}', [CostController::class, 'destroy'])->name('tickets.costs.destroy');
 
     Route::resource('contacts', ContactController::class);
 
