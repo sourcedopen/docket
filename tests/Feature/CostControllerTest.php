@@ -14,7 +14,7 @@ it('stores a cost', function () {
             'description' => 'Filing fee',
             'incurred_at' => '2026-02-28',
         ])
-        ->assertRedirect(route('tickets.show', $ticket));
+        ->assertRedirect(route('tickets.show', $ticket).'#costs');
 
     $cost = $ticket->costs()->first();
 
@@ -67,7 +67,7 @@ it('allows nullable description', function () {
             'amount' => 50,
             'incurred_at' => '2026-02-28',
         ])
-        ->assertRedirect(route('tickets.show', $ticket));
+        ->assertRedirect(route('tickets.show', $ticket).'#costs');
 
     expect($ticket->costs()->first()->description)->toBeNull();
 });
@@ -83,7 +83,7 @@ it('updates a cost', function () {
             'description' => 'Updated fee',
             'incurred_at' => '2026-03-01',
         ])
-        ->assertRedirect(route('tickets.show', $ticket));
+        ->assertRedirect(route('tickets.show', $ticket).'#costs');
 
     $cost->refresh();
 
@@ -98,7 +98,7 @@ it('deletes a cost', function () {
 
     $this->actingAs($user)
         ->delete(route('tickets.costs.destroy', [$ticket, $cost]))
-        ->assertRedirect(route('tickets.show', $ticket));
+        ->assertRedirect(route('tickets.show', $ticket).'#costs');
 
     expect(Cost::find($cost->id))->toBeNull();
 });

@@ -27,7 +27,7 @@ class CommentController extends Controller
             }
         });
 
-        return redirect()->route('tickets.show', $ticket)->with('success', 'Comment added.');
+        return redirect()->route('tickets.show', $ticket)->withFragment('timeline')->with('success', 'Comment added.');
     }
 
     public function destroy(Ticket $ticket, Comment $comment): RedirectResponse
@@ -37,6 +37,6 @@ class CommentController extends Controller
 
         $comment->delete();
 
-        return redirect()->route('tickets.show', $ticket)->with('success', 'Comment deleted.');
+        return redirect()->route('tickets.show', $ticket)->withFragment('timeline')->with('success', 'Comment deleted.');
     }
 }

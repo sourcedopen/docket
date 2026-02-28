@@ -17,7 +17,7 @@ class CostController extends Controller
 
         $ticket->costs()->create($data);
 
-        return redirect()->route('tickets.show', $ticket)->with('success', 'Cost added.');
+        return redirect()->route('tickets.show', $ticket)->withFragment('costs')->with('success', 'Cost added.');
     }
 
     public function update(UpdateCostRequest $request, Ticket $ticket, Cost $cost): RedirectResponse
@@ -26,7 +26,7 @@ class CostController extends Controller
 
         $cost->update($request->validated());
 
-        return redirect()->route('tickets.show', $ticket)->with('success', 'Cost updated.');
+        return redirect()->route('tickets.show', $ticket)->withFragment('costs')->with('success', 'Cost updated.');
     }
 
     public function destroy(Ticket $ticket, Cost $cost): RedirectResponse
@@ -35,6 +35,6 @@ class CostController extends Controller
 
         $cost->delete();
 
-        return redirect()->route('tickets.show', $ticket)->with('success', 'Cost deleted.');
+        return redirect()->route('tickets.show', $ticket)->withFragment('costs')->with('success', 'Cost deleted.');
     }
 }

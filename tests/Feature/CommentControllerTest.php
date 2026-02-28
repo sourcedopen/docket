@@ -16,7 +16,7 @@ it('stores a comment with commented_at', function () {
             'type' => CommentType::Update->value,
             'commented_at' => $commentedAt->format('Y-m-d\TH:i'),
         ])
-        ->assertRedirect(route('tickets.show', $ticket));
+        ->assertRedirect(route('tickets.show', $ticket).'#timeline');
 
     $comment = $ticket->comments()->first();
 
@@ -71,7 +71,7 @@ it('deletes a comment', function () {
 
     $this->actingAs($user)
         ->delete(route('tickets.comments.destroy', [$ticket, $comment]))
-        ->assertRedirect(route('tickets.show', $ticket));
+        ->assertRedirect(route('tickets.show', $ticket).'#timeline');
 
     expect(Comment::find($comment->id))->toBeNull();
 });

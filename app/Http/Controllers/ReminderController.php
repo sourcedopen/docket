@@ -17,7 +17,7 @@ class ReminderController extends Controller
 
         $ticket->reminders()->create($data);
 
-        return redirect()->route('tickets.show', $ticket)->with('success', 'Reminder added.');
+        return redirect()->route('tickets.show', $ticket)->withFragment('reminders')->with('success', 'Reminder added.');
     }
 
     public function update(StoreReminderRequest $request, Ticket $ticket, Reminder $reminder): RedirectResponse
@@ -29,7 +29,7 @@ class ReminderController extends Controller
 
         $reminder->update($data);
 
-        return redirect()->route('tickets.show', $ticket)->with('success', 'Reminder updated.');
+        return redirect()->route('tickets.show', $ticket)->withFragment('reminders')->with('success', 'Reminder updated.');
     }
 
     public function destroy(Ticket $ticket, Reminder $reminder): RedirectResponse
@@ -38,6 +38,6 @@ class ReminderController extends Controller
 
         $reminder->delete();
 
-        return redirect()->route('tickets.show', $ticket)->with('success', 'Reminder deleted.');
+        return redirect()->route('tickets.show', $ticket)->withFragment('reminders')->with('success', 'Reminder deleted.');
     }
 }
