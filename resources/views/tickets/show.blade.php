@@ -71,18 +71,18 @@
         </div>
 
         {{-- Tabs --}}
-        <div x-data="{ tab: 'details' }">
+        <div x-data="{ tab: ['details', 'timeline', 'reminders', 'costs'].includes(location.hash.substring(1)) ? location.hash.substring(1) : 'details' }" x-init="$watch('tab', value => history.replaceState(null, '', '#' + value))">
             <div role="tablist" class="tabs tabs-bordered">
-                <a role="tab" @click="tab = 'details'" :class="{ 'tab-active': tab === 'details' }" class="tab">Details</a>
-                <a role="tab" @click="tab = 'timeline'" :class="{ 'tab-active': tab === 'timeline' }" class="tab">
+                <a role="tab" href="#details" @click.prevent="tab = 'details'" :class="{ 'tab-active': tab === 'details' }" class="tab">Details</a>
+                <a role="tab" href="#timeline" @click.prevent="tab = 'timeline'" :class="{ 'tab-active': tab === 'timeline' }" class="tab">
                     Timeline
                     <span class="badge badge-sm ml-1">{{ $comments->count() }}</span>
                 </a>
-                <a role="tab" @click="tab = 'reminders'" :class="{ 'tab-active': tab === 'reminders' }" class="tab">
+                <a role="tab" href="#reminders" @click.prevent="tab = 'reminders'" :class="{ 'tab-active': tab === 'reminders' }" class="tab">
                     Reminders
                     <span class="badge badge-sm ml-1">{{ $ticket->reminders->count() }}</span>
                 </a>
-                <a role="tab" @click="tab = 'costs'" :class="{ 'tab-active': tab === 'costs' }" class="tab">
+                <a role="tab" href="#costs" @click.prevent="tab = 'costs'" :class="{ 'tab-active': tab === 'costs' }" class="tab">
                     Costs
                     <span class="badge badge-sm ml-1">{{ $ticket->costs->count() }}</span>
                 </a>
