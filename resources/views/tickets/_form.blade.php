@@ -201,7 +201,7 @@
             id="description"
             name="description"
             rows="4"
-            class="textarea textarea-bordered @error('description') textarea-error @enderror"
+            class="textarea textarea-bordered w-full @error('description') textarea-error @enderror"
         >{{ old('description', $ticket->description ?? '') }}</textarea>
         @error('description')
             <span class="label-text-alt text-error mt-1">{{ $message }}</span>
