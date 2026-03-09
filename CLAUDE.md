@@ -28,6 +28,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 
 This project has domain-specific skills available. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
+- `configuring-horizon` — Configures Laravel Horizon for Redis queue management. Activate when the user explicitly mentions Horizon by name. Covers Horizon installation, supervisor configuration, worker processes, dashboard authorization, auto-scaling, balancing strategies, job monitoring, metrics, tags, and notifications. Also applies when troubleshooting Horizon-specific issues such as blank metrics, LongWaitDetected alerts, or misconfigured Horizon workers. Do NOT activate for generic queue, Redis, or job monitoring questions that do not mention Horizon.
 - `pest-testing` — Tests applications using the Pest 4 PHP framework. Activates when writing tests, creating unit or feature tests, adding assertions, testing Livewire components, browser testing, debugging test failures, working with datasets or mocking; or when the user mentions test, spec, TDD, expects, assertion, coverage, or needs to verify functionality works.
 - `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
 
