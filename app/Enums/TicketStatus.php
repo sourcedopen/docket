@@ -27,6 +27,18 @@ enum TicketStatus: string
         };
     }
 
+    /**
+     * @return list<self>
+     */
+    public static function completedStatuses(): array
+    {
+        return [
+            self::Resolved,
+            self::Closed,
+            self::Escalated,
+        ];
+    }
+
     public function label(): string
     {
         return match ($this) {

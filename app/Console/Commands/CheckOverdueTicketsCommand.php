@@ -15,16 +15,13 @@ class CheckOverdueTicketsCommand extends Command
 
     public function handle(): int
     {
-        $closedStatuses = [
-            TicketStatus::Resolved->value,
-            TicketStatus::Closed->value,
-        ];
+        $completedStatuses = array_map(fn (TicketStatus $s) => $s->value, TicketStatus::completedStatuses());
 
         $tickets = Ticket::query()
             ->with('user')
             ->whereNotNull('due_date')
             ->whereDate('due_date', '<', today())
-            ->whereNotIn('status', $closedStatuses)
+            ->whereNotIn('status', $completedStatuses)
             ->whereNull('deleted_at')
             ->get();
 

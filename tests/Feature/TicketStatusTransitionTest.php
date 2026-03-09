@@ -65,6 +65,47 @@ it('state machine validates all defined transitions', function (TicketStatus $fr
     'reopened → closed' => [TicketStatus::Reopened, TicketStatus::Closed],
 ]);
 
+it('rejects escalation when ticket has no child tickets', function () {
+    $user = User::factory()->create();
+    $ticket = Ticket::factory()->create([
+        'user_id' => $user->id,
+        'status' => TicketStatus::InProgress,
+    ]);
+
+    $this->actingAs($user)
+        ->put(route('tickets.update', $ticket), [
+            'title' => $ticket->title,
+            'ticket_type_id' => $ticket->ticket_type_id,
+            'status' => TicketStatus::Escalated->value,
+            'priority' => $ticket->priority->value,
+        ])
+        ->assertSessionHasErrors('status');
+
+    expect($ticket->fresh()->status)->toBe(TicketStatus::InProgress);
+});
+
+it('allows escalation when ticket has a child ticket', function () {
+    $user = User::factory()->create();
+    $ticket = Ticket::factory()->create([
+        'user_id' => $user->id,
+        'status' => TicketStatus::InProgress,
+    ]);
+    Ticket::factory()->create([
+        'parent_ticket_id' => $ticket->id,
+    ]);
+
+    $this->actingAs($user)
+        ->put(route('tickets.update', $ticket), [
+            'title' => $ticket->title,
+            'ticket_type_id' => $ticket->ticket_type_id,
+            'status' => TicketStatus::Escalated->value,
+            'priority' => $ticket->priority->value,
+        ])
+        ->assertRedirect(route('tickets.show', $ticket));
+
+    expect($ticket->fresh()->status)->toBe(TicketStatus::Escalated);
+});
+
 it('state machine rejects invalid transitions', function (TicketStatus $from, TicketStatus $to) {
     $machine = new TicketStateMachine;
 

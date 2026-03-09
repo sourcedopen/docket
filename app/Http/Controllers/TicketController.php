@@ -61,10 +61,10 @@ class TicketController extends Controller
         }
 
         if ($request->boolean('overdue')) {
-            $closedStatuses = [\App\Enums\TicketStatus::Resolved->value, \App\Enums\TicketStatus::Closed->value];
+            $completedStatuses = array_map(fn (TicketStatus $s) => $s->value, TicketStatus::completedStatuses());
             $query->whereNotNull('due_date')
                 ->whereDate('due_date', '<', today())
-                ->whereNotIn('status', $closedStatuses);
+                ->whereNotIn('status', $completedStatuses);
         }
 
         $tickets = $query->paginate(20)->withQueryString();
@@ -119,7 +119,10 @@ class TicketController extends Controller
     public function show(Ticket $ticket): View
     {
         $ticket->load(['ticketType', 'filedWithContact', 'comments.user', 'comments.media', 'reminders', 'costs.user', 'tags', 'user', 'parentTicket', 'childTickets.ticketType']);
-        $allowedStatuses = $this->stateMachine->allowedTransitions($ticket->status);
+        $allowedStatuses = array_filter(
+            $this->stateMachine->allowedTransitions($ticket->status),
+            fn (TicketStatus $status) => $status !== TicketStatus::Escalated || $ticket->childTickets->isNotEmpty(),
+        );
         $documents = $ticket->getMedia('documents');
         $comments = $ticket->comments->sortByDesc('commented_at')->values();
         $totalCost = $ticket->costs->sum('amount');
@@ -146,6 +149,10 @@ class TicketController extends Controller
 
         if (! $this->stateMachine->canTransition($ticket->status, $newStatus)) {
             return back()->withErrors(['status' => "Cannot transition from {$ticket->status->label()} to {$newStatus->label()}."]);
+        }
+
+        if ($newStatus === TicketStatus::Escalated && ! $ticket->childTickets()->exists()) {
+            return back()->withErrors(['status' => 'A ticket can only be escalated if it has at least one follow-up ticket.']);
         }
 
         if ($newStatus === TicketStatus::Closed && $ticket->status !== TicketStatus::Closed) {
