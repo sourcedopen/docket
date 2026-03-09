@@ -20,7 +20,6 @@ class TicketTypeSeeder extends Seeder
                     'fields' => [
                         ['key' => 'pio_name', 'label' => 'PIO Name', 'type' => 'string', 'required' => true],
                         ['key' => 'department', 'label' => 'Department', 'type' => 'string', 'required' => false],
-                        ['key' => 'fee_paid', 'label' => 'Fee Paid (₹)', 'type' => 'number', 'default' => 10],
                         ['key' => 'mode_of_filing', 'label' => 'Mode of Filing', 'type' => 'select', 'options' => ['online_portal', 'speed_post', 'in_person'], 'required' => true],
                         ['key' => 'first_appeal_deadline', 'label' => 'First Appeal Deadline', 'type' => 'date'],
                     ],

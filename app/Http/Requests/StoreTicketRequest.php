@@ -32,6 +32,9 @@ class StoreTicketRequest extends FormRequest
             'files' => ['nullable', 'array'],
             'files.*' => ['file', 'max:20480'],
             'parent_ticket_id' => ['nullable', 'integer', 'exists:tickets,id'],
+            'cost_amount' => ['nullable', 'numeric', 'min:0.01'],
+            'cost_description' => ['nullable', 'string', 'max:255'],
+            'cost_incurred_at' => ['nullable', 'required_with:cost_amount', 'date'],
         ];
     }
 }

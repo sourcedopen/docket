@@ -139,6 +139,49 @@ it('shows the ticket detail page after updating custom fields', function () {
         ->assertSuccessful();
 });
 
+it('creates a ticket with an initial cost', function () {
+    $user = User::factory()->create();
+    $ticketType = TicketType::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('tickets.store'), [
+            'title' => 'Ticket with cost',
+            'ticket_type_id' => $ticketType->id,
+            'status' => TicketStatus::Draft->value,
+            'priority' => TicketPriority::Medium->value,
+            'cost_amount' => '25.50',
+            'cost_description' => 'Filing fee',
+            'cost_incurred_at' => '2026-03-10',
+        ])
+        ->assertRedirect();
+
+    $ticket = Ticket::query()->where('title', 'Ticket with cost')->firstOrFail();
+
+    expect($ticket->costs)->toHaveCount(1)
+        ->and($ticket->costs->first()->amount)->toBe('25.50')
+        ->and($ticket->costs->first()->description)->toBe('Filing fee')
+        ->and($ticket->costs->first()->incurred_at->toDateString())->toBe('2026-03-10')
+        ->and($ticket->costs->first()->user_id)->toBe($user->id);
+});
+
+it('creates a ticket without cost when cost fields are empty', function () {
+    $user = User::factory()->create();
+    $ticketType = TicketType::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('tickets.store'), [
+            'title' => 'Ticket without cost',
+            'ticket_type_id' => $ticketType->id,
+            'status' => TicketStatus::Draft->value,
+            'priority' => TicketPriority::Medium->value,
+        ])
+        ->assertRedirect();
+
+    $ticket = Ticket::query()->where('title', 'Ticket without cost')->firstOrFail();
+
+    expect($ticket->costs)->toHaveCount(0);
+});
+
 it('creates a follow-up ticket linked to a parent', function () {
     $user = User::factory()->create();
     $parent = Ticket::factory()->create(['user_id' => $user->id]);

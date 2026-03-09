@@ -101,6 +101,15 @@ class TicketController extends Controller
             $ticket = Ticket::query()->create($data);
             $this->syncTagsAndMedia($request, $ticket, 'documents');
 
+            if ($request->filled('cost_amount')) {
+                $ticket->costs()->create([
+                    'amount' => $data['cost_amount'],
+                    'description' => $data['cost_description'] ?? null,
+                    'incurred_at' => $data['cost_incurred_at'],
+                    'user_id' => auth()->id(),
+                ]);
+            }
+
             return $ticket;
         });
 
