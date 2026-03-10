@@ -65,6 +65,14 @@
 
                         <div class="form-control justify-end">
                             <label class="label cursor-pointer gap-2 py-1">
+                                <input type="hidden" name="open" value="0">
+                                <input type="checkbox" name="open" value="1" class="checkbox checkbox-sm checkbox-primary" {{ !request()->has('open') || request()->boolean('open') ? 'checked' : '' }}>
+                                <span class="label-text text-xs font-medium">Open tickets</span>
+                            </label>
+                        </div>
+
+                        <div class="form-control justify-end">
+                            <label class="label cursor-pointer gap-2 py-1">
                                 <input type="checkbox" name="overdue" value="1" class="checkbox checkbox-sm checkbox-error" {{ request('overdue') ? 'checked' : '' }}>
                                 <span class="label-text text-xs text-error font-medium">Overdue only</span>
                             </label>
@@ -77,7 +85,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-sm btn-outline">Filter</button>
-                        @if (request()->hasAny(['status', 'priority', 'ticket_type_id', 'tag', 'filed_from', 'filed_to', 'overdue', 'search']))
+                        @if (request()->hasAny(['status', 'priority', 'ticket_type_id', 'tag', 'filed_from', 'filed_to', 'overdue', 'search', 'open']))
                             <a href="{{ route('tickets.index') }}" class="btn btn-sm btn-ghost">Clear</a>
                         @endif
 

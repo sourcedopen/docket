@@ -27,6 +27,9 @@ class TicketController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
+        } elseif (! $request->has('open') || $request->boolean('open')) {
+            $completedValues = array_map(fn (TicketStatus $s) => $s->value, TicketStatus::completedStatuses());
+            $query->whereNotIn('status', $completedValues);
         }
 
         if ($request->filled('priority')) {
