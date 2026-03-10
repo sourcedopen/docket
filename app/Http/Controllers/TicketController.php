@@ -23,7 +23,7 @@ class TicketController extends Controller
     {
         $query = Ticket::query()
             ->with(['ticketType', 'filedWithContact', 'tags'])
-            ->latest();
+            ->orderByRaw('due_date IS NULL, due_date ASC');
 
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
