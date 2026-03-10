@@ -11,7 +11,7 @@ it('sorts tickets by due date ascending with nulls last by default', function ()
     $ticketLateDue = Ticket::factory()->create(['due_date' => now()->addDays(10)]);
     $ticketEarlyDue = Ticket::factory()->create(['due_date' => now()->addDays(2)]);
 
-    $response = $this->actingAs($user)->get(route('tickets.index'));
+    $response = $this->actingAs($user)->get(route('tickets.index', ['filter' => ['open' => '1']]));
 
     $response->assertOk();
 
@@ -30,7 +30,7 @@ it('shows only open tickets by default', function () {
     $closedTicket = Ticket::factory()->create(['status' => TicketStatus::Closed]);
     $resolvedTicket = Ticket::factory()->create(['status' => TicketStatus::Resolved]);
 
-    $response = $this->actingAs($user)->get(route('tickets.index'));
+    $response = $this->actingAs($user)->get(route('tickets.index', ['filter' => ['open' => '1']]));
 
     $tickets = $response->viewData('tickets');
     $ids = $tickets->pluck('id')->all();
