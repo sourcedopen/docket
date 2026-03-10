@@ -8,69 +8,67 @@ use App\Http\Requests\UpdateTicketRequest;
 use App\Models\Contact;
 use App\Models\Ticket;
 use App\Models\TicketType;
+use App\QueryBuilders\Sorts\NullsLastSort;
 use App\Services\TicketStateMachine;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use SourcedOpen\Tags\Models\Tag;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class TicketController extends Controller
 {
     public function __construct(private readonly TicketStateMachine $stateMachine) {}
 
-    public function index(Request $request): View
+    public function index(): View
     {
-        $query = Ticket::query()
+        $tickets = QueryBuilder::for(Ticket::class)
             ->with(['ticketType', 'filedWithContact', 'tags'])
-            ->orderByRaw('due_date IS NULL, due_date ASC');
+            ->allowedFilters([
+                AllowedFilter::exact('status'),
+                AllowedFilter::exact('priority'),
+                AllowedFilter::exact('ticket_type_id'),
+                AllowedFilter::callback('tag', fn (Builder $query, $value) => $query->whereHas('tags', fn (Builder $q) => $q->where('name', $value))),
+                AllowedFilter::callback('search', function (Builder $query, $value): void {
+                    $query->where(function (Builder $q) use ($value) {
+                        $q->where('title', 'like', "%{$value}%")
+                            ->orWhere('description', 'like', "%{$value}%")
+                            ->orWhere('reference_number', 'like', "%{$value}%")
+                            ->orWhere('external_reference', 'like', "%{$value}%");
+                    });
+                }),
+                AllowedFilter::callback('filed_from', fn (Builder $query, $value) => $query->whereDate('filed_date', '>=', $value)),
+                AllowedFilter::callback('filed_to', fn (Builder $query, $value) => $query->whereDate('filed_date', '<=', $value)),
+                AllowedFilter::callback('overdue', function (Builder $query, $value): void {
+                    if ($value) {
+                        $completedValues = array_map(fn (TicketStatus $s) => $s->value, TicketStatus::completedStatuses());
+                        $query->whereNotNull('due_date')
+                            ->whereDate('due_date', '<', today())
+                            ->whereNotIn('status', $completedValues);
+                    }
+                }),
+                AllowedFilter::callback('open', function (Builder $query, $value): void {
+                    if (request()->filled('filter.status')) {
+                        return;
+                    }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        } elseif (! $request->has('open') || $request->boolean('open')) {
-            $completedValues = array_map(fn (TicketStatus $s) => $s->value, TicketStatus::completedStatuses());
-            $query->whereNotIn('status', $completedValues);
-        }
+                    if ($value) {
+                        $completedValues = array_map(fn (TicketStatus $s) => $s->value, TicketStatus::completedStatuses());
+                        $query->whereNotIn('status', $completedValues);
+                    }
+                })->default(true),
+            ])
+            ->defaultSort(AllowedSort::custom('due_date', new NullsLastSort))
+            ->allowedSorts([
+                AllowedSort::custom('due_date', new NullsLastSort),
+            ])
+            ->paginate(20)
+            ->withQueryString();
 
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->input('priority'));
-        }
-
-        if ($request->filled('ticket_type_id')) {
-            $query->where('ticket_type_id', $request->input('ticket_type_id'));
-        }
-
-        if ($request->filled('tag')) {
-            $tag = $request->input('tag');
-            $query->whereHas('tags', fn ($q) => $q->where('name', $tag));
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('reference_number', 'like', "%{$search}%")
-                    ->orWhere('external_reference', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('filed_from')) {
-            $query->whereDate('filed_date', '>=', $request->input('filed_from'));
-        }
-
-        if ($request->filled('filed_to')) {
-            $query->whereDate('filed_date', '<=', $request->input('filed_to'));
-        }
-
-        if ($request->boolean('overdue')) {
-            $completedStatuses = array_map(fn (TicketStatus $s) => $s->value, TicketStatus::completedStatuses());
-            $query->whereNotNull('due_date')
-                ->whereDate('due_date', '<', today())
-                ->whereNotIn('status', $completedStatuses);
-        }
-
-        $tickets = $query->paginate(20)->withQueryString();
         $ticketTypes = TicketType::query()->where('is_active', true)->orderBy('sort_order')->get();
         $allTags = Tag::query()->orderBy('name')->get();
 

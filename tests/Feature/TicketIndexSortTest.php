@@ -47,7 +47,7 @@ it('shows all tickets when open filter is unchecked', function () {
     $closedTicket = Ticket::factory()->create(['status' => TicketStatus::Closed]);
     $resolvedTicket = Ticket::factory()->create(['status' => TicketStatus::Resolved]);
 
-    $response = $this->actingAs($user)->get(route('tickets.index', ['open' => '0']));
+    $response = $this->actingAs($user)->get(route('tickets.index', ['filter' => ['open' => '0']]));
 
     $tickets = $response->viewData('tickets');
     $ids = $tickets->pluck('id')->all();
@@ -62,7 +62,7 @@ it('ignores open filter when a specific status is selected', function () {
 
     $closedTicket = Ticket::factory()->create(['status' => TicketStatus::Closed]);
 
-    $response = $this->actingAs($user)->get(route('tickets.index', ['status' => TicketStatus::Closed->value]));
+    $response = $this->actingAs($user)->get(route('tickets.index', ['filter' => ['status' => TicketStatus::Closed->value]]));
 
     $tickets = $response->viewData('tickets');
     $ids = $tickets->pluck('id')->all();

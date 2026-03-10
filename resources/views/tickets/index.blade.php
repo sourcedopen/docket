@@ -7,10 +7,10 @@
                     <div class="flex flex-wrap items-end gap-3">
                         <div class="form-control">
                             <label class="label py-1"><span class="label-text text-xs">Status</span></label>
-                            <select name="status" class="select select-bordered select-sm">
+                            <select name="filter[status]" class="select select-bordered select-sm">
                                 <option value="">All Statuses</option>
                                 @foreach (\App\Enums\TicketStatus::cases() as $status)
-                                    <option value="{{ $status->value }}" {{ request('status') === $status->value ? 'selected' : '' }}>
+                                    <option value="{{ $status->value }}" {{ request('filter.status') === $status->value ? 'selected' : '' }}>
                                         {{ $status->label() }}
                                     </option>
                                 @endforeach
@@ -19,10 +19,10 @@
 
                         <div class="form-control">
                             <label class="label py-1"><span class="label-text text-xs">Priority</span></label>
-                            <select name="priority" class="select select-bordered select-sm">
+                            <select name="filter[priority]" class="select select-bordered select-sm">
                                 <option value="">All Priorities</option>
                                 @foreach (\App\Enums\TicketPriority::cases() as $priority)
-                                    <option value="{{ $priority->value }}" {{ request('priority') === $priority->value ? 'selected' : '' }}>
+                                    <option value="{{ $priority->value }}" {{ request('filter.priority') === $priority->value ? 'selected' : '' }}>
                                         {{ $priority->label() }}
                                     </option>
                                 @endforeach
@@ -31,10 +31,10 @@
 
                         <div class="form-control">
                             <label class="label py-1"><span class="label-text text-xs">Type</span></label>
-                            <select name="ticket_type_id" class="select select-bordered select-sm">
+                            <select name="filter[ticket_type_id]" class="select select-bordered select-sm">
                                 <option value="">All Types</option>
                                 @foreach ($ticketTypes as $type)
-                                    <option value="{{ $type->id }}" {{ request('ticket_type_id') == $type->id ? 'selected' : '' }}>
+                                    <option value="{{ $type->id }}" {{ request('filter.ticket_type_id') == $type->id ? 'selected' : '' }}>
                                         {{ $type->name }}
                                     </option>
                                 @endforeach
@@ -43,10 +43,10 @@
 
                         <div class="form-control">
                             <label class="label py-1"><span class="label-text text-xs">Tag</span></label>
-                            <select name="tag" class="select select-bordered select-sm">
+                            <select name="filter[tag]" class="select select-bordered select-sm">
                                 <option value="">All Tags</option>
                                 @foreach ($allTags as $tag)
-                                    <option value="{{ $tag->name }}" {{ request('tag') === $tag->name ? 'selected' : '' }}>
+                                    <option value="{{ $tag->name }}" {{ request('filter.tag') === $tag->name ? 'selected' : '' }}>
                                         {{ $tag->name }}
                                     </option>
                                 @endforeach
@@ -55,25 +55,25 @@
 
                         <div class="form-control">
                             <label class="label py-1"><span class="label-text text-xs">Filed From</span></label>
-                            <input type="date" name="filed_from" value="{{ request('filed_from') }}" class="input input-bordered input-sm">
+                            <input type="date" name="filter[filed_from]" value="{{ request('filter.filed_from') }}" class="input input-bordered input-sm">
                         </div>
 
                         <div class="form-control">
                             <label class="label py-1"><span class="label-text text-xs">Filed To</span></label>
-                            <input type="date" name="filed_to" value="{{ request('filed_to') }}" class="input input-bordered input-sm">
+                            <input type="date" name="filter[filed_to]" value="{{ request('filter.filed_to') }}" class="input input-bordered input-sm">
                         </div>
 
                         <div class="form-control justify-end">
                             <label class="label cursor-pointer gap-2 py-1">
-                                <input type="hidden" name="open" value="0">
-                                <input type="checkbox" name="open" value="1" class="checkbox checkbox-sm checkbox-primary" {{ !request()->has('open') || request()->boolean('open') ? 'checked' : '' }}>
+                                <input type="hidden" name="filter[open]" value="0">
+                                <input type="checkbox" name="filter[open]" value="1" class="checkbox checkbox-sm checkbox-primary" {{ !request()->has('filter.open') || request()->boolean('filter.open') ? 'checked' : '' }}>
                                 <span class="label-text text-xs font-medium">Open tickets</span>
                             </label>
                         </div>
 
                         <div class="form-control justify-end">
                             <label class="label cursor-pointer gap-2 py-1">
-                                <input type="checkbox" name="overdue" value="1" class="checkbox checkbox-sm checkbox-error" {{ request('overdue') ? 'checked' : '' }}>
+                                <input type="checkbox" name="filter[overdue]" value="1" class="checkbox checkbox-sm checkbox-error" {{ request('filter.overdue') ? 'checked' : '' }}>
                                 <span class="label-text text-xs text-error font-medium">Overdue only</span>
                             </label>
                         </div>
@@ -81,11 +81,11 @@
 
                     <div class="flex flex-wrap items-center gap-3">
                         <div class="form-control flex-1 min-w-48">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search title, description, reference…" class="input input-bordered input-sm w-full">
+                            <input type="text" name="filter[search]" value="{{ request('filter.search') }}" placeholder="Search title, description, reference…" class="input input-bordered input-sm w-full">
                         </div>
 
                         <button type="submit" class="btn btn-sm btn-outline">Filter</button>
-                        @if (request()->hasAny(['status', 'priority', 'ticket_type_id', 'tag', 'filed_from', 'filed_to', 'overdue', 'search', 'open']))
+                        @if (request()->has('filter'))
                             <a href="{{ route('tickets.index') }}" class="btn btn-sm btn-ghost">Clear</a>
                         @endif
 
@@ -147,7 +147,7 @@
                                     <td>{{ $ticket->filedWithContact?->name ?? '—' }}</td>
                                     <td>
                                         @foreach ($ticket->tags as $tag)
-                                            <a href="{{ route('tickets.index', ['tag' => $tag->name]) }}" class="badge badge-sm" style="background-color: {{ $tag->color ?? '#6b7280' }}; color: #fff; border-color: rgba(255,255,255,0.25);">{{ $tag->name }}</a>
+                                            <a href="{{ route('tickets.index', ['filter[tag]' => $tag->name]) }}" class="badge badge-sm" style="background-color: {{ $tag->color ?? '#6b7280' }}; color: #fff; border-color: rgba(255,255,255,0.25);">{{ $tag->name }}</a>
                                         @endforeach
                                     </td>
                                     <td>{{ $ticket->due_date?->format('d M Y') ?? '—' }}</td>
