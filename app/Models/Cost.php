@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\CostFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Cost extends Model
 {
-    /** @use HasFactory<\Database\Factories\CostFactory> */
+    /** @use HasFactory<CostFactory> */
     use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [

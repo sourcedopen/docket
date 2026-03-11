@@ -3,12 +3,13 @@
 namespace Database\Factories;
 
 use App\Enums\CommentType;
+use App\Models\Comment;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Comment>
+ * @extends Factory<Comment>
  */
 class CommentFactory extends Factory
 {

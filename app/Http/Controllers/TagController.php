@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ticket;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,7 @@ class TagController extends Controller
 
         $ticketCounts = DB::table('taggables')
             ->select('tag_id', DB::raw('count(*) as count'))
-            ->where('taggable_type', \App\Models\Ticket::class)
+            ->where('taggable_type', Ticket::class)
             ->groupBy('tag_id')
             ->pluck('count', 'tag_id');
 

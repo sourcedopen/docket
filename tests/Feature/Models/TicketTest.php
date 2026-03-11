@@ -8,6 +8,7 @@ use App\Models\Reminder;
 use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 
 it('can be created with a factory', function () {
     $ticket = Ticket::factory()->create();
@@ -41,8 +42,8 @@ it('casts date fields', function () {
         'due_date' => '2026-02-14',
     ]);
 
-    expect($ticket->fresh()->filed_date)->toBeInstanceOf(\Carbon\CarbonImmutable::class)
-        ->and($ticket->fresh()->due_date)->toBeInstanceOf(\Carbon\CarbonImmutable::class);
+    expect($ticket->fresh()->filed_date)->toBeInstanceOf(CarbonImmutable::class)
+        ->and($ticket->fresh()->due_date)->toBeInstanceOf(CarbonImmutable::class);
 });
 
 it('supports soft deletes', function () {

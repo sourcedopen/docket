@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CostController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\TagController;
@@ -13,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => redirect()->route('dashboard'));
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('tickets', TicketController::class);
     Route::get('/tickets/create/{ticketType}', [TicketController::class, 'createWithType'])->name('tickets.create-with-type');
@@ -37,7 +39,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/tags', [TagController::class, 'store'])->name('tags.store');
     Route::delete('/tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
 
-    Route::get('/activity', [App\Http\Controllers\ActivityController::class, 'index'])->name('activity.index');
+    Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
 
     Route::get('/media/{media}/download', [MediaController::class, 'download'])->name('media.download');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');

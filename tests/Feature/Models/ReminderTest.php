@@ -4,6 +4,7 @@ use App\Enums\ReminderType;
 use App\Models\Reminder;
 use App\Models\Ticket;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 
 it('can be created with a factory', function () {
     $reminder = Reminder::factory()->create();
@@ -21,7 +22,7 @@ it('casts type to ReminderType enum', function () {
 it('casts remind_at as datetime', function () {
     $reminder = Reminder::factory()->create(['remind_at' => '2026-03-01 09:00:00']);
 
-    expect($reminder->fresh()->remind_at)->toBeInstanceOf(\Carbon\CarbonImmutable::class);
+    expect($reminder->fresh()->remind_at)->toBeInstanceOf(CarbonImmutable::class);
 });
 
 it('casts boolean fields', function () {

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ContactType;
+use Database\Factories\ContactFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,7 +16,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Contact extends Model implements HasMedia
 {
-    /** @use HasFactory<\Database\Factories\ContactFactory> */
+    /** @use HasFactory<ContactFactory> */
     use HasFactory, HasTags, InteractsWithMedia, LogsActivity, SoftDeletes;
 
     protected $fillable = [

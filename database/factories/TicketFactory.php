@@ -4,12 +4,13 @@ namespace Database\Factories;
 
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
+use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Ticket>
+ * @extends Factory<Ticket>
  */
 class TicketFactory extends Factory
 {
