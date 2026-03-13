@@ -18,13 +18,101 @@ A ticket management system for tracking issues, managing contacts, and coordinat
 - **Activity log** — Full audit trail of all changes across tickets, contacts, and types
 - **Tags** — Organize tickets with a shared tag system
 
-## Requirements
+## Deployment
+
+### Prerequisites
+
+- [Docker](https://www.docker.com/get-started) with Docker Compose
+- **Database** — MySQL 8.0+ or PostgreSQL 15+
+- **Redis** — required only if using [Laravel Horizon](https://laravel.com/docs/horizon) for queue processing
+- **Object storage** — S3-compatible bucket (optional; falls back to local private disk)
+
+### Quick start
+
+A reference Compose file is provided at [`docker-compose.prod.yml`](docker-compose.prod.yml). It pulls the pre-built image from GHCR and starts the app, scheduler, queue worker, and a MySQL database.
+
+1. Create your environment file:
+
+```bash
+cp .env.example .env
+```
+
+2. Configure the required variables in `.env`:
+
+```dotenv
+APP_NAME="Open Docket"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://your-domain.com
+
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=docket
+DB_USERNAME=docket
+DB_PASSWORD=<secure-password>
+
+# Queue — use "database" (default) or "redis" (if running Horizon)
+QUEUE_CONNECTION=database
+
+# Redis — only needed with Horizon
+# REDIS_HOST=redis
+# REDIS_PORT=6379
+
+# S3 — optional, omit to use local private storage
+# FILESYSTEM_DISK=s3
+# AWS_ACCESS_KEY_ID=
+# AWS_SECRET_ACCESS_KEY=
+# AWS_DEFAULT_REGION=us-east-1
+# AWS_BUCKET=
+```
+
+3. Start the services:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+4. Generate the application key and run migrations:
+
+```bash
+docker compose -f docker-compose.prod.yml exec app php artisan key:generate
+docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
+```
+
+The app will be available at `http://localhost` (or the port set via `APP_PORT`).
+
+### Using Horizon (optional)
+
+To use Horizon for queue processing instead of the default queue worker:
+
+1. Uncomment the `redis` and `horizon` services in `docker-compose.prod.yml`
+2. Uncomment the `redis-data` volume
+3. Set `QUEUE_CONNECTION=redis` and configure `REDIS_HOST=redis` in `.env`
+4. Remove or stop the default `queue` service — Horizon replaces it
+
+### Using S3 storage (optional)
+
+Set `FILESYSTEM_DISK=s3` and provide your AWS/S3-compatible credentials in `.env`. When omitted, file attachments are stored on the local private disk inside the `storage` volume.
+
+### Image tags
+
+Images are published to `ghcr.io/sourcedopen/docket`. Available tags:
+
+| Tag | Description |
+|---|---|
+| `latest` | Most recent stable release |
+| `x.y.z` | Specific version |
+
+---
+
+## Local Development
+
+### Requirements
 
 - PHP 8.2+
 - Node.js 22+
 - Composer
-
-## Local Setup
 
 ### Option 1 — Laravel Herd
 
